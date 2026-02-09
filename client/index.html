@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <title>二手书交易</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
   <h1> 二！手！书！交！易！！！</h1>
@@ -22,24 +24,24 @@
   <hr />
 
   <!-- 交易列表 -->
-<section id="trade-section">
-  <h3>📦 交易列表</h3>
+  <section id="trade-section">
+    <h3>📦 交易列表</h3>
 
-  <ul id="trade-list" class="trade-list">
-    
-  </ul>
+    <ul id="trade-list" class="trade-list">
 
-  <p id="trade-empty" style="display: none; color: #888;">
-    暂无交易
-  </p>
-</section>
+    </ul>
 
-<hr />
+    <p id="trade-empty" style="display: none; color: #888;">
+      暂无交易
+    </p>
+  </section>
 
-<button onclick="location.href='publish.html'">➕ 发布交易</button>
+  <hr />
+
+  <button onclick="location.href='publish.html'">➕ 发布交易</button>
 
   <!-- 模块加载 -->
-    <script type="module">
+  <script type="module">
     import * as trade from "./js/trade.js";
     import * as keymgr from "./js/keymgr.js";
 
@@ -49,19 +51,19 @@
     // 初始化交易列表
     document.addEventListener('DOMContentLoaded', async () => {
       await trade.initIndexPage();
-      
+
       document.getElementById('btn-show-fingerprint').addEventListener('click', () => {
         keymgr.showCurrentFingerprint();
       });
-      
+
       document.getElementById('btn-export-identity').addEventListener('click', () => {
         keymgr.exportIdentity();
       });
-      
+
       document.getElementById('btn-import-identity').addEventListener('click', () => {
         keymgr.importIdentityFromPrompt();
       });
-      
+
       document.getElementById('btn-generate-identity').addEventListener('click', () => {
         keymgr.generateNewIdentity();
       });
@@ -73,4 +75,5 @@
   </script>
 
 </body>
+
 </html>

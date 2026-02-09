@@ -1,6 +1,5 @@
 # models/trade.py
 
-from typing import Optional, Dict
 import time
 
 
@@ -14,10 +13,10 @@ class Trade:
         self,
         trade_id: str,
         seller_pubkey: str,
-        content: Dict,
+        content: dict,
         status: str = "OPEN",
-        buyer_pubkey: Optional[str] = None,
-        created_at: Optional[int] = None,
+        buyer_pubkey: str | None = None,
+        created_at: int | None = None,
     ):
         self.trade_id = trade_id
         self.seller_pubkey = seller_pubkey
@@ -28,7 +27,7 @@ class Trade:
 
     # ---------- 统一结构 ----------
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """
         将 Trade 转为标准 dict 形式
         用途：
@@ -46,7 +45,7 @@ class Trade:
         }
 
     @staticmethod
-    def from_dict(data: Dict) -> "Trade":
+    def from_dict(data: dict) -> "Trade":
         """
         从 dict 构造 Trade
         """

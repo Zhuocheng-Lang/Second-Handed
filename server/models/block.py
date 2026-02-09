@@ -1,7 +1,6 @@
 # models/block.py
 
 import time
-from typing import Dict, Optional
 from crypto.hash import hash_object
 
 
@@ -15,9 +14,9 @@ class Block:
         index: int,
         prev_hash: str,
         block_type: str,
-        payload: Dict,
-        timestamp: Optional[int] = None,
-        block_hash: Optional[str] = None,
+        payload: dict,
+        timestamp: int | None = None,
+        block_hash: str | None = None,
     ):
         self.index = index
         self.prev_hash = prev_hash
@@ -49,7 +48,7 @@ class Block:
 
     # ---------- 验证逻辑（非常关键） ----------
 
-    def verify(self, prev_block: Optional["Block"]) -> bool:
+    def verify(self, prev_block: "Block | None") -> bool:
         """
         验证该区块是否有效
         """
@@ -70,7 +69,7 @@ class Block:
 
     # ---------- 序列化 ----------
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "index": self.index,
             "prev_hash": self.prev_hash,
@@ -81,7 +80,7 @@ class Block:
         }
 
     @staticmethod
-    def from_dict(data: Dict) -> "Block":
+    def from_dict(data: dict) -> "Block":
         return Block(
             index=data["index"],
             prev_hash=data["prev_hash"],

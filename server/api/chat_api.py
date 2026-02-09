@@ -93,7 +93,7 @@ async def chat_websocket(websocket: WebSocket, trade_id: str):
                             trade_id, ciphertext, chat_pubkey, buyer_chat_pubkey
                         )
                     else:
-                        print(f"[chat_api] 收到无效的CHAT消息: 缺少ciphertext")
+                        print("[chat_api] 收到无效的CHAT消息: 缺少ciphertext")
 
                 elif message_type == "JOIN":
                     # 重新广播JOIN消息

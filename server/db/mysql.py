@@ -44,7 +44,7 @@ class ConnectionPool:
             self.pool.put(conn)
 
     def _create_connection(self):
-        return pymysql.connect(**DB_CONFIG)
+        return pymysql.connect(**DB_CONFIG)  # type: ignore
 
 
 def init_connection_pool(max_connections=10):
@@ -60,6 +60,7 @@ def get_connection():
         # 初始化连接池
         init_connection_pool()
 
+    assert connection_pool is not None
     return connection_pool.get_connection()
 
 

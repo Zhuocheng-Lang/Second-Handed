@@ -70,10 +70,32 @@ def get_messages(trade_id: str, limit: int = 100):
             rows = cursor.fetchall()
 
     normalized = []
+    new_columns = [
+        "id",
+        "trade_id",
+        "buyer_chat_pubkey",
+        "sender_pubkey",
+        "ciphertext",
+        "timestamp",
+    ]
+    old_columns = ["id", "trade_id", "ciphertext", "timestamp", "sender_chat_pubkey"]
+
     for row in rows:
-        if "sender_pubkey" not in row and "sender_chat_pubkey" in row:
-            row["sender_pubkey"] = row.get("sender_chat_pubkey")
-        if "buyer_chat_pubkey" not in row:
-            row["buyer_chat_pubkey"] = None
-        normalized.append(row)
+        # 处理元组或字典
+        if isinstance(row, dict):
+            row_dict = row
+        else:
+            # 尝试使用新的列名，如果失败则使用旧的
+            try:
+                row_dict = dict(zip(new_columns, row))
+            except Exception as e:
+                row_dict = dict(zip(old_columns, row))  # TODO: 添加日志或错误处理
+
+        # 规范化字段
+        if "sender_pubkey" not in row_dict and "sender_chat_pubkey" in row_dict:
+            row_dict["sender_pubkey"] = row_dict["sender_chat_pubkey"]
+        if "buyer_chat_pubkey" not in row_dict:
+            row_dict["buyer_chat_pubkey"] = None
+
+        normalized.append(row_dict)
     return normalized

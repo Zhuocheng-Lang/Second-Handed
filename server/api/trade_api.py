@@ -9,12 +9,11 @@ from services.trade_service import (
     apply_block,
     get_trade_chat_info,
     update_chat_pubkey,
-    get_peer_chat_pubkey
+    get_peer_chat_pubkey,
 )
 from db.trades import get_trade, list_trades
 
 router = APIRouter(prefix="/trade")
-
 
 
 # GET —— 获取交易列表------list
@@ -29,19 +28,21 @@ async def get_trade_list():
     # 转换数据库格式为 API 格式
     result = []
     for trade in trades:
-        result.append({
-            "trade_id": trade["trade_id"],
-            "seller_pubkey": trade["seller_pubkey"],
-            "buyer_pubkey": trade.get("buyer_pubkey"),
-            "status": trade["status"],
-            "description": trade.get("description"),
-            "price": trade.get("price"),
-
-            "content_hash": trade.get("content_hash"),
-            "created_at": trade.get("created_at").isoformat() if trade.get("created_at") else None,
-        })
+        result.append(
+            {
+                "trade_id": trade["trade_id"],
+                "seller_pubkey": trade["seller_pubkey"],
+                "buyer_pubkey": trade.get("buyer_pubkey"),
+                "status": trade["status"],
+                "description": trade.get("description"),
+                "price": trade.get("price"),
+                "content_hash": trade.get("content_hash"),
+                "created_at": trade.get("created_at").isoformat()
+                if trade.get("created_at")
+                else None,
+            }
+        )
     return {"data": result}
-
 
 
 # GET —— 获取单个交易 /id
@@ -55,7 +56,7 @@ async def get_single_trade(trade_id: str):
     trade = get_trade(trade_id)
     if trade is None:
         raise HTTPException(status_code=404, detail="Trade not found")
-    
+
     return {
         "trade_id": trade["trade_id"],
         "seller_pubkey": trade["seller_pubkey"],
@@ -64,9 +65,10 @@ async def get_single_trade(trade_id: str):
         "description": trade.get("description"),
         "price": trade.get("price"),
         "content_hash": trade.get("content_hash"),
-        "created_at": trade.get("created_at").isoformat() if trade.get("created_at") else None,
+        "created_at": trade.get("created_at").isoformat()
+        if trade.get("created_at")
+        else None,
     }
-
 
 
 # CREATE —— 创建交易
@@ -137,7 +139,6 @@ async def create_trade(request: Request):
     return {"status": "ok"}
 
 
-
 # 完成交易    双签
 
 
@@ -187,7 +188,6 @@ async def complete_trade(request: Request):
     return {"status": "ok"}
 
 
-
 # CANCEL —— 取消交易（卖家单签）
 
 
@@ -234,9 +234,6 @@ async def cancel_trade(request: Request):
     return {"status": "ok"}
 
 
-
-
-
 # JOIN —— 买家加入交易
 
 
@@ -252,14 +249,19 @@ async def join_trade_api(trade_id: str, payload: dict):
 
     # 简单的实现：只更新buyer_pubkey，不处理聊天密钥
     from db.trades import update_trade_join
+
     try:
-        update_trade_join(trade_id=trade_id, buyer_pubkey=buyer_pubkey, buyer_chat_pubkey={})
+        update_trade_join(
+            trade_id=trade_id, buyer_pubkey=buyer_pubkey, buyer_chat_pubkey={}
+        )
         return {"ok": True}
     except Exception as e:
         raise HTTPException(500, str(e))
 
+
 # 聊天相关API
 # ============================================================
+
 
 @router.get("/{trade_id}/chat-info")
 async def get_trade_chat_info_api(trade_id: str):
@@ -274,6 +276,7 @@ async def get_trade_chat_info_api(trade_id: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/{trade_id}/update-chat-pubkey")
 async def update_chat_pubkey_api(trade_id: str, request: Request):
     """
@@ -283,18 +286,19 @@ async def update_chat_pubkey_api(trade_id: str, request: Request):
         data = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
-    
+
     identity_pubkey = data.get("identity_pubkey")
     chat_pubkey = data.get("chat_pubkey")
-    
+
     if not identity_pubkey or not chat_pubkey:
         raise HTTPException(400, "identity_pubkey and chat_pubkey required")
-    
+
     try:
         result = update_chat_pubkey(trade_id, identity_pubkey, chat_pubkey)
         return result
     except Exception as e:
         raise HTTPException(500, str(e))
+
 
 @router.get("/{trade_id}/peer-chat-pubkey/{identity_pubkey}")
 async def get_peer_chat_pubkey_api(trade_id: str, identity_pubkey: str):
@@ -303,9 +307,6 @@ async def get_peer_chat_pubkey_api(trade_id: str, identity_pubkey: str):
     """
     try:
         peer_chat_pubkey = get_peer_chat_pubkey(trade_id, identity_pubkey)
-        return {
-            "success": True,
-            "peer_chat_pubkey": peer_chat_pubkey
-        }
+        return {"success": True, "peer_chat_pubkey": peer_chat_pubkey}
     except Exception as e:
         raise HTTPException(500, str(e))

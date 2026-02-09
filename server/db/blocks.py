@@ -1,11 +1,11 @@
 # db/blocks.py
 
 
-#sql命令以后要优化
-#1. 添加合适的索引
-#2. 分页查询优化（避免SELECT *）
-#3. 读写分离（如有需要）
-#4. 定期清理日志和优化表
+# sql命令以后要优化
+# 1. 添加合适的索引
+# 2. 分页查询优化（避免SELECT *）
+# 3. 读写分离（如有需要）
+# 4. 定期清理日志和优化表
 
 
 from db.mysql import get_cursor
@@ -36,7 +36,7 @@ def insert_block(block: dict):
                 block["timestamp"],
                 block["type"],
                 block["payload_json"],
-            )
+            ),
         )
 
 
@@ -47,7 +47,7 @@ def get_last_block():
     LIMIT 1
     """
 
-#sql命令是以后要优化的
+    # sql命令是以后要优化的
 
     with get_cursor() as cursor:
         cursor.execute(sql)

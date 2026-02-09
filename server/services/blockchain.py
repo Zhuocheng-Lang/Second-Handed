@@ -15,6 +15,7 @@ from db.blocks import (
 #  获取最新区块
 # -----------------------------
 
+
 def get_latest_block():
     """
     返回链上的最后一个区块
@@ -22,7 +23,7 @@ def get_latest_block():
     block = get_last_block()
     if block is None:
         return None
-    
+
     # 转换数据库格式为内部格式
     return {
         "index": block["block_index"],
@@ -41,28 +42,32 @@ def get_all_blocks():
     blocks = []
     for block in db_get_all_blocks():
         payload = json.loads(block["payload_json"])
-        blocks.append({
-            "type": block["type"],
-            "trade_id": payload["trade_id"],
-            "payload": payload["payload"],
-            "signatures": payload.get("signatures", {}),
-        })
-    
+        blocks.append(
+            {
+                "type": block["type"],
+                "trade_id": payload["trade_id"],
+                "payload": payload["payload"],
+                "signatures": payload.get("signatures", {}),
+            }
+        )
+
     return blocks
+
 
 # -----------------------------
 #  计算区块 hash
 # -----------------------------
+
 
 def compute_block_hash(block):
     """
     hash(index + prev_hash + payload + timestamp)
     """
     block_string = (
-        str(block["index"]) +
-        block["prev_hash"] +
-        json.dumps(block["payload"], sort_keys=True) +
-        str(block["timestamp"])
+        str(block["index"])
+        + block["prev_hash"]
+        + json.dumps(block["payload"], sort_keys=True)
+        + str(block["timestamp"])
     )
 
     return hashlib.sha256(block_string.encode()).hexdigest()
@@ -72,11 +77,12 @@ def compute_block_hash(block):
 # 追加新区块
 # -----------------------------
 
+
 def append_block(block_data):
     """
     校验 prev_hash
     写入 blocks 表
-    
+
     block_data 格式：
     {
         "type": "CREATE" | "COMPLETE" | "CANCEL",
@@ -108,7 +114,7 @@ def append_block(block_data):
         "index": index,
         "prev_hash": prev_hash,
         "payload": full_payload,
-        "timestamp": int(time.time())
+        "timestamp": int(time.time()),
     }
     block_hash = compute_block_hash(block_for_hash)
 

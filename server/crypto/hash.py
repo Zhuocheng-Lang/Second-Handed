@@ -18,9 +18,9 @@ def canonical_json(obj: Any) -> str:
     try:
         return json.dumps(
             obj,
-            sort_keys=True,           #  key 顺序固定
-            separators=(",", ":"),    #  去掉所有空格
-            ensure_ascii=False        #  保留 UTF-8与前端必须一致
+            sort_keys=True,  #  key 顺序固定
+            separators=(",", ":"),  #  去掉所有空格
+            ensure_ascii=False,  #  保留 UTF-8与前端必须一致
         )
     except (TypeError, ValueError) as e:
         # 不允许不确定序列化的对象
@@ -33,7 +33,7 @@ def hash_object(obj: Any) -> str:
     返回 hex string
     """
 
-    canonical = canonical_json(obj)        #  规范化 JSON
-    data = canonical.encode("utf-8")       #  明确转为 bytes
+    canonical = canonical_json(obj)  #  规范化 JSON
+    data = canonical.encode("utf-8")  #  明确转为 bytes
     digest = hashlib.sha256(data).hexdigest()  #  SHA-256
     return digest

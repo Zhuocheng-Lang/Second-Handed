@@ -1,9 +1,10 @@
 from db.mysql import get_cursor
 
-def insert_message(trade_id: str, buyer_chat_pubkey: str, sender_pubkey: str, ciphertext: str):
-    """
-    
-    """
+
+def insert_message(
+    trade_id: str, buyer_chat_pubkey: str, sender_pubkey: str, ciphertext: str
+):
+    """ """
     new_sql = """
     INSERT INTO chats (
         trade_id,
@@ -24,15 +25,16 @@ def insert_message(trade_id: str, buyer_chat_pubkey: str, sender_pubkey: str, ci
 
     with get_cursor() as cursor:
         try:
-            cursor.execute(new_sql, (trade_id, buyer_chat_pubkey, sender_pubkey, ciphertext))
+            cursor.execute(
+                new_sql, (trade_id, buyer_chat_pubkey, sender_pubkey, ciphertext)
+            )
         except Exception:
             #  buyer_chat_pubkey / sender_pubkey
             cursor.execute(old_sql, (trade_id, ciphertext, sender_pubkey))
 
+
 def get_messages(trade_id: str, limit: int = 100):
-    """
-   
-    """
+    """ """
     new_sql = """
     SELECT 
         id,
@@ -67,7 +69,6 @@ def get_messages(trade_id: str, limit: int = 100):
             cursor.execute(old_sql, (trade_id, limit))
             rows = cursor.fetchall()
 
-    
     normalized = []
     for row in rows:
         if "sender_pubkey" not in row and "sender_chat_pubkey" in row:

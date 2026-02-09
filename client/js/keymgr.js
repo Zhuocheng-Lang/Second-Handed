@@ -25,8 +25,8 @@ import {
 export async function generateNewIdentity() {
   const ok = confirm(
     "这将生成一套新的身份密钥，并覆盖当前身份。\n\n" +
-      "⚠️ 如果你没有备份旧密钥，将永久失去之前的交易与身份。\n\n" +
-      "是否继续？"
+    "⚠️ 如果你没有备份旧密钥，将永久失去之前的交易与身份。\n\n" +
+    "是否继续？"
   );
   if (!ok) return;
 
@@ -68,7 +68,7 @@ export async function importIdentityFromPrompt() {
 
     const ok = confirm(
       "即将导入新的身份并覆盖当前身份。\n\n" +
-        "是否确认继续？"
+      "是否确认继续？"
     );
     if (!ok) return;
 

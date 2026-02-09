@@ -35,7 +35,7 @@ async function httpGet(path, options = {}) {
     console.error(`[api] GET请求失败: ${path}, 状态码: ${res.status}`);
     throw new Error(`GET ${path} failed: ${res.status}`);
   }
-  
+
   const data = await res.json();
   console.log(`[api] GET请求成功: ${path}, 响应数据:`, data);
   return data;
@@ -57,7 +57,7 @@ async function httpPost(path, body) {
     console.error(`[api] POST请求失败: ${path}, 状态码: ${res.status}, 错误信息: ${text}`);
     throw new Error(`POST ${path} failed: ${res.status} ${text}`);
   }
-  
+
   const data = await res.json();
   console.log(`[api] POST请求成功: ${path}, 响应数据:`, data);
   return data;
@@ -178,14 +178,14 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
 
     chatSocket.onopen = async () => {
       console.log("[chat] WebSocket 连接已建立");
-      
+
       // 发送认证信息
       const authMessage = {
         type: 'auth',
         identity_pubkey: identityPubkey,
         chat_pubkey: chatPubkey || null
       };
-      
+
       chatSocket.send(JSON.stringify(authMessage));
       console.log("[chat] 发送认证信息");
     };
@@ -193,7 +193,7 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
     chatSocket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
+
         // 处理认证响应
         if (data.type === 'auth_response') {
           console.log('[chat] 收到认证响应:', data.success ? '成功' : '失败');
@@ -203,7 +203,7 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
           }
           return;
         }
-        
+
         // 处理其他消息
         chatSocketCallbacks.forEach(callback => callback(data));
       } catch (error) {
@@ -244,7 +244,7 @@ export function sendChatMessage(message) {
   if (!chatSocket) {
     throw new Error("sendChatMessage: socket not initialized");
   }
-  
+
   if (chatSocket.readyState !== WebSocket.OPEN) {
     throw new Error(`sendChatMessage: socket not connected (state: ${chatSocket.readyState})`);
   }
@@ -263,7 +263,7 @@ export function sendChatTextMessage(ciphertext, senderChatPubkey, buyerChatPubke
     buyer_chat_pubkey: buyerChatPubkey || senderChatPubkey,
     ciphertext: ciphertext
   };
-  
+
   sendChatMessage(message);
 }
 
@@ -277,7 +277,7 @@ export function sendJoinMessage(chatPubkey) {
     identity_pubkey: currentIdentityPubkey,
     chat_pubkey: chatPubkey
   };
-  
+
   sendChatMessage(message);
 }
 
@@ -301,7 +301,7 @@ export async function getChatHistory(tradeId, limit = 100) {
   if (!tradeId) {
     throw new Error("getChatHistory: tradeId required");
   }
-  
+
   const response = await httpGet(`/chat/history/${tradeId}?limit=${limit}`);
   return response.messages || [];
 }
@@ -313,7 +313,7 @@ export async function getChatRoomInfo(tradeId) {
   if (!tradeId) {
     throw new Error("getChatRoomInfo: tradeId required");
   }
-  
+
   return httpGet(`/chat/room/${tradeId}`);
 }
 
@@ -324,7 +324,7 @@ export async function getTradeChatInfo(tradeId) {
   if (!tradeId) {
     throw new Error("getTradeChatInfo: tradeId required");
   }
-  
+
   return httpGet(`/trade/${tradeId}/chat-info`);
 }
 

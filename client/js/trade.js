@@ -41,7 +41,7 @@ let currentIdentity = null;
 
 export async function publishTrade(tradeContent) {
   console.log("[trade] 开始发布交易");
-  
+
   // 加载用户身份密钥对
   const { publicKey, privateKey } = await loadIdentityKeyPair();
   const timestamp = Math.floor(Date.now() / 1000);
@@ -78,14 +78,14 @@ export async function publishTrade(tradeContent) {
   // 发送创建交易请求到服务器
   console.log("[trade] 发送创建交易请求");
   await createTrade({ trade_id: tradeId, body, signature });
-  
+
   console.log("[trade] 交易发布成功，交易ID:", tradeId);
   return tradeId;
 }
 
 export async function signComplete(tradeId) {
   console.log("[trade] 开始对交易完成进行签名，交易ID:", tradeId);
-  
+
   const { publicKey, privateKey } = await loadIdentityKeyPair();
 
   // 创建交易完成的主体数据
@@ -98,15 +98,15 @@ export async function signComplete(tradeId) {
   // 计算交易完成数据的哈希值
   console.log("[trade] 计算交易完成数据哈希");
   const completeHash = await hash(body);
-  
+
   // 对哈希值进行签名
   console.log("[trade] 对交易完成哈希进行签名");
   const signature = await sign(completeHash, privateKey);
 
   console.log("[trade] 签名完成");
-  return { 
-    hash: completeHash, 
-    signature, 
+  return {
+    hash: completeHash,
+    signature,
     pubkey: publicKey,
     body // 包含body
   };
@@ -114,7 +114,7 @@ export async function signComplete(tradeId) {
 
 export async function submitComplete(tradeId, sigA, sigB) {
   console.log("[trade] 开始提交交易完成请求，交易ID:", tradeId);
-  
+
   // 验证本地哈希与签名哈希是否一致
   console.log("[trade] 验证本地哈希一致性");
   const localHash = await hash(sigA.body);
@@ -145,13 +145,13 @@ export async function submitComplete(tradeId, sigA, sigB) {
     sig_seller: sigA.signature,
     sig_buyer: sigB.signature,
   });
-  
+
   console.log("[trade] 交易完成请求提交成功");
 }
 
 export async function cancelTrade(tradeId) {
   console.log("[trade] 开始取消交易，交易ID:", tradeId);
-  
+
   const { privateKey } = await loadIdentityKeyPair();
 
   // 创建交易取消的主体数据
@@ -164,7 +164,7 @@ export async function cancelTrade(tradeId) {
   // 计算交易取消数据的哈希值
   console.log("[trade] 计算交易取消数据哈希");
   const cancelHash = await hash(body);
-  
+
   // 对哈希值进行签名
   console.log("[trade] 对交易取消哈希进行签名");
   const signature = await sign(cancelHash, privateKey);
@@ -176,7 +176,7 @@ export async function cancelTrade(tradeId) {
     hash: cancelHash,
     signature,
   });
-  
+
   console.log("[trade] 交易取消请求发送成功");
 }
 
@@ -254,7 +254,7 @@ export async function initIndexPage() {
     return;
   }
 
-  
+
 
   // 修复
   if (trades && trades.data) {
@@ -315,7 +315,7 @@ export async function publishTradeFromForm() {
 
 export async function initTradePage() {
   console.log("[trade] 开始初始化交易页面");
-  
+
   // 获取交易ID
   const tradeId = new URLSearchParams(location.search).get("trade_id");
   if (!tradeId) {
@@ -325,7 +325,7 @@ export async function initTradePage() {
   }
 
   console.log("[trade] 交易ID:", tradeId);
-  
+
   // 获取交易详情
   let trade = await getTrade(tradeId);
 
@@ -351,14 +351,14 @@ export async function initTradePage() {
     onNewMessage: handleNewMessage,
     onSwitchSession: handleSwitchSession
   });
-  
+
   // 绑定发送按钮
   bindChatSend();
 
   /* ========= 我是卖家 ========= */
   if (trade.seller_pubkey === publicKey) {
     console.log("[trade] 用户身份：卖家");
-    
+
     if (trade.buyer_pubkey) {
       console.log("[trade] 卖家聊天已初始化，买家已加入");
     } else {
@@ -384,7 +384,7 @@ export async function initTradePage() {
       trade = await getTrade(tradeId);
     }
   }
-  
+
   console.log("[trade] 交易页面初始化完成");
 }
 
@@ -395,48 +395,48 @@ function handleNewSession(sessionInfo) {
     console.error("[trade] 无法找到 chat-sessions 元素");
     return;
   }
-  
+
   const peerChatPubKey = sessionInfo.chatPubKey;
   const sessionItem = document.createElement("div");
   sessionItem.className = "session-item";
-  
+
   // 确保peerChatPubKey是字符串
-  const displayText = typeof peerChatPubKey === 'string' 
-    ? peerChatPubKey.slice(0, 12) + "..." 
+  const displayText = typeof peerChatPubKey === 'string'
+    ? peerChatPubKey.slice(0, 12) + "..."
     : String(peerChatPubKey);
-    
+
   sessionItem.textContent = displayText;
   sessionItem.onclick = () => {
     // 切换到该会话
     chat.switchSession(peerChatPubKey);
-    
+
     // 更新UI，移除所有会话的active类
     document.querySelectorAll(".session-item").forEach(item => {
       item.classList.remove("active");
     });
-    
+
     // 为当前选中的会话添加active类
     sessionItem.classList.add("active");
   };
-  
+
   // 如果是第一个会话，自动切换到它
   if (sessionsList.children.length === 0) {
     chat.switchSession(peerChatPubKey);
     sessionItem.classList.add("active");
   }
-  
+
   sessionsList.appendChild(sessionItem);
 }
 
 // 处理会话切换
 function handleSwitchSession(peerChatPubKey) {
   console.log("[trade] 切换到会话:", peerChatPubKey);
-  
+
   // 更新会话列表的active状态
   document.querySelectorAll(".session-item").forEach(item => {
     item.classList.remove("active");
   });
-  
+
   // 找到对应的会话项并添加active类
   const sessionItems = document.querySelectorAll(".session-item");
   sessionItems.forEach(item => {
@@ -444,7 +444,7 @@ function handleSwitchSession(peerChatPubKey) {
       item.classList.add("active");
     }
   });
-  
+
   // 清空当前消息列表，等待新消息
   const messagesContainer = document.getElementById("chat-messages");
   if (messagesContainer) {
@@ -459,7 +459,7 @@ async function handleNewMessage(payload) {
     return;
   }
 
-    const rawMessage = payload?.message;
+  const rawMessage = payload?.message;
   const messageText = rawMessage?.content || rawMessage?.message;
   if (messageText && !rawMessage?.isOwn) {
     console.log("[trade] 收到新消息:", messageText);
@@ -469,7 +469,7 @@ async function handleNewMessage(payload) {
     }
   }
 
-  
+
   // 渲染当前会话的消息
   if (chat.getCurrentSession()?.peerChatPubKey === peerChatPubKey) {
     renderChatMessages(peerChatPubKey);
@@ -501,35 +501,35 @@ function renderChatMessages(peerChatPubKey) {
     console.error("[trade] 无法找到 chat-messages 元素");
     return;
   }
-  
+
   messagesContainer.innerHTML = "";
-  
+
   // 获取当前会话
   const session = chat.getSession(peerChatPubKey);
   if (!session) {
     return;
   }
-  
+
   // 渲染消息
   session.messages.forEach(msg => {
     const messageDiv = document.createElement("div");
     messageDiv.className = "chat-message";
-    
+
     // 判断是自己发送的还是对方发送的
     messageDiv.classList.add(msg.isOwn ? "own-message" : "other-message");
-    
+
     // 显示消息内容
     messageDiv.textContent = msg.content;
-    
+
     // 显示时间
     const timeSpan = document.createElement("span");
     timeSpan.className = "message-time";
     timeSpan.textContent = new Date(msg.timestamp).toLocaleTimeString();
     messageDiv.appendChild(timeSpan);
-    
+
     messagesContainer.appendChild(messageDiv);
   });
-  
+
   // 滚动到底部
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
@@ -538,7 +538,7 @@ function renderChatMessages(peerChatPubKey) {
 function bindChatSend() {
   const sendBtn = document.getElementById("send-btn");
   const chatInput = document.getElementById("chat-input");
-  
+
   sendBtn.onclick = async () => {
     const message = chatInput.value.trim();
     if (message) {
@@ -546,7 +546,7 @@ function bindChatSend() {
       chatInput.value = "";
     }
   };
-  
+
   // 支持回车键发送
   chatInput.addEventListener("keypress", async (e) => {
     if (e.key === "Enter") {
@@ -670,7 +670,7 @@ async function tryHandleTradeCompleteRequest(messageText) {
 export async function verifyPeerSignature(body, hash, signature, peerPubKey) {
   // 导入crypto模块
   const crypto = await import('./crypto.js');
-  
+
   const localHash = await crypto.hash(body)
 
   if (localHash !== hash) {
@@ -691,10 +691,10 @@ export async function buyerInitiateCompleteTrade() {
     if (!tradeId) {
       throw new Error("缺少交易ID");
     }
-    
+
     // 1. 买家生成自己的签名和交易body
     const mySignature = await signComplete(tradeId);
-    
+
     // 2. 将交易信息和签名分享给卖家
     // 实际实现中，应该通过加密聊天系统发送
     const tradeInfo = {
@@ -703,10 +703,10 @@ export async function buyerInitiateCompleteTrade() {
       signature: mySignature.signature,
       pubkey: mySignature.pubkey
     };
-    
+
     alert("请将以下交易信息发送给卖家：\n" + JSON.stringify(tradeInfo));
     alert("等待卖家确认并返回其签名");
-    
+
   } catch (error) {
     console.error("买家发起完成交易失败:", error);
     alert("发起完成交易失败: " + error.message);
@@ -720,16 +720,16 @@ export async function sellerProcessCompleteTrade() {
     if (!tradeId) {
       throw new Error("缺少交易ID");
     }
-    
+
     // 1. 卖家获取买家发送的交易信息
     const buyerTradeInfo = prompt("请输入买家发送的交易信息（JSON格式）：");
     if (!buyerTradeInfo) {
       alert("未提供买家交易信息，处理失败");
       return;
     }
-    
+
     const buyerSig = JSON.parse(buyerTradeInfo);
-    
+
     // 2. 卖家校验买家签名的有效性
     try {
       await verifyPeerSignature(buyerSig.body, buyerSig.hash, buyerSig.signature, buyerSig.pubkey);
@@ -738,14 +738,14 @@ export async function sellerProcessCompleteTrade() {
       alert("买家签名验证失败: " + error.message);
       return;
     }
-    
+
     // 3. 卖家对相同的body进行签名
     // 生成与买家相同body的签名
     const sellerSig = await signCompleteWithBody(buyerSig.body);
-    
+
     // 4. 将卖家签名发送给买家
     alert("请将以下卖家签名信息发送给买家：\n" + JSON.stringify(sellerSig));
-    
+
   } catch (error) {
     console.error("卖家处理交易完成请求失败:", error);
     alert("处理交易完成请求失败: " + error.message);
@@ -755,12 +755,12 @@ export async function sellerProcessCompleteTrade() {
 // 使用指定的body生成签名（用于卖家对买家的body进行签名）
 export async function signCompleteWithBody(body) {
   const { publicKey, privateKey } = await loadIdentityKeyPair();
-  
+
   // 计算与买家相同body的hash
   const completeHash = await hash(body);
   // 用卖家的私钥签名
   const signature = await sign(completeHash, privateKey);
-  
+
   return { hash: completeHash, signature, pubkey: publicKey, body };
 }
 
@@ -768,8 +768,8 @@ export async function signCompleteWithBody(body) {
 export async function submitBothSignatures(tradeId, buyerSig, sellerSig) {
   try {
     // 验证双方签名和hash的一致性
-    await submitComplete(tradeId,  sellerSig, buyerSig);
-    
+    await submitComplete(tradeId, sellerSig, buyerSig);
+
     alert("交易完成请求已提交，交易状态将更新为已完成");
     location.reload();
   } catch (error) {
@@ -862,14 +862,14 @@ export async function cancelCurrentTrade() {
     if (!tradeId) {
       throw new Error("缺少交易ID");
     }
-    
+
     if (!confirm("确定要取消此交易吗？此操作不可撤销。")) {
       return;
     }
-    
+
     // 调用取消交易函数
     await cancelTrade(tradeId);
-    
+
     alert("交易取消请求已提交，交易状态将更新为已取消");
     // 刷新页面以显示最新状态
     location.reload();

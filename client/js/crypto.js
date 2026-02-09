@@ -98,10 +98,10 @@ export async function generateIdentityKeyPair() {
 
   // 生成X25519密钥对用于密钥交换
   const x25519KeyPair = await generateX25519KeyPair();
-  
-  return { 
-    publicKey, 
-    privateKey, 
+
+  return {
+    publicKey,
+    privateKey,
     x25519PublicKey: x25519KeyPair.publicKey,
     x25519PrivateKey: x25519KeyPair.privateKey
   };
@@ -135,7 +135,7 @@ export async function saveIdentityKeyPair({ publicKey, privateKey, x25519PublicK
     IDENTITY_KEY,
     JSON.stringify({ publicKey, privateKey })
   );
-  
+
   // 保存X25519密钥
   if (x25519PublicKey && x25519PrivateKey) {
     localStorage.setItem(
@@ -151,9 +151,9 @@ export async function saveIdentityKeyPair({ publicKey, privateKey, x25519PublicK
 export async function loadIdentityKeyPair() {
   const stored = localStorage.getItem(IDENTITY_KEY);
   if (!stored) return null;
-  
+
   const identity = JSON.parse(stored);
-  
+
   // 读取X25519密钥
   const x25519Stored = localStorage.getItem(X25519_KEY);
   if (x25519Stored) {
@@ -161,7 +161,7 @@ export async function loadIdentityKeyPair() {
     identity.x25519PublicKey = x25519Keys.publicKey;
     identity.x25519PrivateKey = x25519Keys.privateKey;
   }
-  
+
   return identity;
 }
 
@@ -174,14 +174,14 @@ export async function loadX25519KeyPair() {
   if (stored) {
     return JSON.parse(stored);
   }
-  
+
   // 生成新的X25519密钥对并保存
   const keyPair = await generateX25519KeyPair();
   localStorage.setItem(
     X25519_KEY,
     JSON.stringify(keyPair)
   );
-  
+
   return keyPair;
 }
 
@@ -199,19 +199,19 @@ export async function loadX25519KeyPair() {
  */
 export async function hash(data) {
   console.log("[crypto] 开始计算哈希");
-  
+
   // 规范化数据为JSON字符串
   const canonical = canonicalize(data);
-  
+
   // 转换为字节数组
   const bytes = new TextEncoder().encode(canonical);
-  
+
   // 计算SHA-256哈希
   const digest = await crypto.subtle.digest("SHA-256", bytes);
-  
+
   const hexHash = bufToHex(digest);
   console.log("[crypto] 哈希计算完成:", hexHash);
-  
+
   return hexHash;
 }
 
@@ -228,7 +228,7 @@ export async function hash(data) {
  */
 export async function sign(hashHex, privateKeyB64) {
   console.log("[crypto] 开始签名，哈希值:", hashHex);
-  
+
   // 导入私钥
   const key = await crypto.subtle.importKey(
     "pkcs8",
@@ -247,7 +247,7 @@ export async function sign(hashHex, privateKeyB64) {
 
   const signatureB64 = bufToBase64(sig);
   console.log("[crypto] 签名完成:", signatureB64);
-  
+
   return signatureB64;
 }
 
@@ -261,7 +261,7 @@ export async function sign(hashHex, privateKeyB64) {
  */
 export async function verify(hashHex, signatureB64, publicKeyB64) {
   console.log("[crypto] 开始验证签名");
-  
+
   // 导入公钥
   const key = await crypto.subtle.importKey(
     "raw",
@@ -280,7 +280,7 @@ export async function verify(hashHex, signatureB64, publicKeyB64) {
   );
 
   console.log("[crypto] 签名验证结果:", isValid ? "有效" : "无效");
-  
+
   return isValid;
 }
 
@@ -305,7 +305,7 @@ export async function deriveChatKey(
 ) {
   try {
     console.log("[crypto] 开始派生聊天密钥");
-    
+
     // 导入我的私钥
     console.log("[crypto] 导入我的X25519私钥");
     const privateKey = await crypto.subtle.importKey(
@@ -315,7 +315,7 @@ export async function deriveChatKey(
       false,
       ["deriveKey", "deriveBits"]
     );
-    
+
     // 导入对方公钥
     console.log("[crypto] 导入对方X25519公钥");
     const publicKey = await crypto.subtle.importKey(
@@ -325,7 +325,7 @@ export async function deriveChatKey(
       false,
       []
     );
-    
+
     // 执行ECDH密钥交换
     console.log("[crypto] 执行ECDH密钥交换");
     const sharedSecret = await crypto.subtle.deriveBits(
@@ -336,11 +336,11 @@ export async function deriveChatKey(
       privateKey,
       256
     );
-    
+
     // 使用HKDF派生聊天密钥，添加tradeId作为salt
     const salt = new TextEncoder().encode(tradeId);
     const info = new TextEncoder().encode("chat-key-derivation");
-    
+
     // 先导入为HKDF密钥
     console.log("[crypto] 执行HKDF密钥派生");
     const hkdfKey = await crypto.subtle.importKey(
@@ -350,7 +350,7 @@ export async function deriveChatKey(
       false,
       ["deriveKey"]
     );
-    
+
     // 派生AES-GCM密钥
     const chatKey = await crypto.subtle.deriveKey(
       {
@@ -364,7 +364,7 @@ export async function deriveChatKey(
       false,
       ["encrypt", "decrypt"]
     );
-    
+
     console.log("[crypto] 聊天密钥派生成功");
     return chatKey;
   } catch (error) {
@@ -413,10 +413,10 @@ export function importIdentityKeyPair(text) {
  */
 export async function encrypt(chatKey, plaintextObject) {
   console.log("[crypto] 开始加密数据");
-  
+
   // 生成随机IV（初始化向量）
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  
+
   // 将对象转换为JSON字符串并编码为字节
   const encoded = new TextEncoder().encode(
     JSON.stringify(plaintextObject)
@@ -430,7 +430,7 @@ export async function encrypt(chatKey, plaintextObject) {
   );
 
   console.log("[crypto] 加密完成");
-  
+
   return {
     iv: bufToBase64(iv),      // Base64编码的IV
     data: bufToBase64(ciphertext),  // Base64编码的加密数据
@@ -446,7 +446,7 @@ export async function encrypt(chatKey, plaintextObject) {
  */
 export async function decrypt(chatKey, ciphertext) {
   console.log("[crypto] 开始解密数据");
-  
+
   // 解码Base64格式的IV和加密数据
   const iv = base64ToBuf(ciphertext.iv);
   const data = base64ToBuf(ciphertext.data);
@@ -460,9 +460,9 @@ export async function decrypt(chatKey, ciphertext) {
 
   // 解码为字符串并解析为JSON对象
   const decoded = JSON.parse(new TextDecoder().decode(plaintext));
-  
+
   console.log("[crypto] 解密完成");
-  
+
   return decoded;
 }
 

@@ -5,6 +5,7 @@
 
 import json
 import logging
+from typing import Any
 from db.mysql import get_cursor
 
 # 设置日志
@@ -63,16 +64,16 @@ def insert_trade(trade: dict):
             if "seller_chat_pubkey" in error_msg or "buyer_chat_pubkey" in error_msg:
                 logger.error("数据库表结构错误：缺少chat_pubkey字段")
                 raise Exception(
-                    f"数据库表结构错误：表中有chat_pubkey字段但代码未提供。"
-                    f"请运行fix_schema.sql修复表结构，或手动执行："
-                    f"ALTER TABLE trades MODIFY COLUMN seller_chat_pubkey TEXT NULL;"
-                    f"ALTER TABLE trades MODIFY COLUMN buyer_chat_pubkey TEXT NULL;"
+                    "数据库表结构错误：表中有chat_pubkey字段但代码未提供。"
+                    "请运行fix_schema.sql修复表结构，或手动执行："
+                    "ALTER TABLE trades MODIFY COLUMN seller_chat_pubkey TEXT NULL;"
+                    "ALTER TABLE trades MODIFY COLUMN buyer_chat_pubkey TEXT NULL;"
                 ) from e
             logger.error("交易插入失败: %s", str(e))
             raise
 
 
-def update_trade_status(trade_id: str, status: str, buyer_pubkey: str = None):
+def update_trade_status(trade_id: str, status: str, buyer_pubkey: str | None = None):
     """
     更新交易状态
 
@@ -239,7 +240,7 @@ def get_trade_with_chat_info(trade_id: str):
 
     with get_cursor() as cursor:
         cursor.execute(sql, (trade_id,))
-        row = cursor.fetchone()
+        row: Any = cursor.fetchone()
 
     if not row:
         logger.info("未找到交易，交易ID: %s", trade_id)

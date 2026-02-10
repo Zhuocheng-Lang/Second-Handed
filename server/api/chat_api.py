@@ -125,8 +125,8 @@ async def chat_websocket(websocket: WebSocket, trade_id: str):
         chat_service.leave_room(trade_id, websocket)
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
-            pass
+        except Exception as e:
+            pass    # TODO: 增加合适的错误处理
 
 
 @http_router.get("/history/{trade_id}")

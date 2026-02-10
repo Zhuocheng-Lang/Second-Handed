@@ -37,9 +37,11 @@ async def get_trade_list():
                 "description": trade.get("description"),
                 "price": trade.get("price"),
                 "content_hash": trade.get("content_hash"),
-                "created_at": trade.get("created_at").isoformat()
-                if trade.get("created_at")
-                else None,
+                "created_at": (
+                    trade["created_at"].isoformat()
+                    if trade.get("created_at") is not None
+                    else None
+                ),
             }
         )
     return {"data": result}
@@ -65,9 +67,11 @@ async def get_single_trade(trade_id: str):
         "description": trade.get("description"),
         "price": trade.get("price"),
         "content_hash": trade.get("content_hash"),
-        "created_at": trade.get("created_at").isoformat()
-        if trade.get("created_at")
-        else None,
+        "created_at": (
+            trade["created_at"].isoformat()
+            if trade.get("created_at") is not None
+            else None
+        ),
     }
 
 

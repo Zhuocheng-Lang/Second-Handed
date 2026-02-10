@@ -1,4 +1,4 @@
-import { publishTrade } from "../domain.js";
+import { publishTrade } from "../../../domain/trade/index.js";
 
 const pageCss = `
 :root {

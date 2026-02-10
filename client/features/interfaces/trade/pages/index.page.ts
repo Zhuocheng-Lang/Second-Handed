@@ -1,6 +1,6 @@
 import { fetchTradeList, exportBlocks as apiExportBlocks } from "../../api/index.js";
-import { loadTradeMeta } from "../../storage/trade_meta.js";
-import * as keymgr from "../../ui/keymgr.js";
+import { loadTradeMeta } from "../../../infrastructure/storage/trade_meta.js";
+import * as keymgr from "../../../infrastructure/ui/keymgr.js";
 
 const pageCss = `
 :root {

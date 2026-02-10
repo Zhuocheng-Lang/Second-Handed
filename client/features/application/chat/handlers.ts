@@ -1,4 +1,4 @@
-import { decrypt } from "../crypto/index.js";
+import { decrypt } from "../../domain/crypto/index.js";
 import { state } from "./state.js";
 import { createSession } from "./session.js";
 import type { ChatMessage, ChatSession } from "./types.js";

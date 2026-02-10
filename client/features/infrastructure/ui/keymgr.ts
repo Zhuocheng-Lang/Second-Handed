@@ -5,7 +5,7 @@ import {
   exportIdentityKeyPair,
   importIdentityKeyPair,
   fingerprintPublicKey,
-} from "../crypto/index.js";
+} from "../../domain/crypto/index.js";
 
 import { downloadText } from "./download.js";
 

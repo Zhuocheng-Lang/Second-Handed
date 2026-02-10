@@ -11,19 +11,19 @@ const distRoot = path.join(repoRoot, "client/dist");
 const pages = [
     {
         title: "二手书交易",
-        entry: path.join(repoRoot, "client/features/trade/pages/index.page.ts"),
+        entry: path.join(repoRoot, "client/features/interfaces/trade/pages/index.page.ts"),
         outHtml: path.join(distRoot, "index.html"),
         lang: "zh-CN"
     },
     {
         title: "发布交易",
-        entry: path.join(repoRoot, "client/features/trade/pages/publish.page.ts"),
+        entry: path.join(repoRoot, "client/features/interfaces/trade/pages/publish.page.ts"),
         outHtml: path.join(distRoot, "publish/index.html"),
         lang: "zh-CN"
     },
     {
         title: "交易详情",
-        entry: path.join(repoRoot, "client/features/trade/pages/trade.page.ts"),
+        entry: path.join(repoRoot, "client/features/interfaces/trade/pages/trade.page.ts"),
         outHtml: path.join(distRoot, "trade/index.html"),
         lang: "zh-CN"
     }

@@ -1,5 +1,5 @@
-import { deriveChatKey, decrypt, generateFingerprint } from "../crypto/index.js";
-import { getChatHistory } from "../api/index.js";
+import { deriveChatKey, decrypt, generateFingerprint } from "../../domain/crypto/index.js";
+import { getChatHistory } from "../../interfaces/api/index.js";
 import { state } from "./state.js";
 import type { ChatSession } from "./types.js";
 import { normalizeChatPubKey } from "./normalize.js";

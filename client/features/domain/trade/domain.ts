@@ -3,8 +3,8 @@ import {
   createTrade,
   completeTrade,
   cancelTrade as apiCancelTrade,
-} from "../api/index.js";
-import { saveTradeMeta } from "../storage/trade_meta.js";
+} from "../../interfaces/api/index.js";
+import { saveTradeMeta } from "../../infrastructure/storage/trade_meta.js";
 
 export interface TradeContent {
   description: string;

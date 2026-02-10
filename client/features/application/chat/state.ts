@@ -1,4 +1,4 @@
-import type { IdentityKeyPair, X25519KeyPair } from "../crypto/index.js";
+import type { IdentityKeyPair, X25519KeyPair } from "../../domain/crypto/index.js";
 import type { ChatSession, ChatUICallbacks } from "./types.js";
 
 export const state = {

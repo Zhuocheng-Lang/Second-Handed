@@ -3,7 +3,7 @@ import {
   loadX25519KeyPair,
   encrypt,
   generateFingerprint,
-} from "../crypto/index.js";
+} from "../../domain/crypto/index.js";
 
 import {
   openChatSocket,
@@ -11,7 +11,7 @@ import {
   getTradeChatInfo,
   updateChatPubkey,
   closeChatSocket
-} from "../api/index.js";
+} from "../../interfaces/api/index.js";
 
 import type { ChatUICallbacks, ChatSession } from "./types.js";
 import { state, resetState } from "./state.js";

@@ -1,9 +1,9 @@
-import { loadIdentityKeyPair } from "../../crypto/index.js";
+import { loadIdentityKeyPair } from "../../../domain/crypto/index.js";
 import { getTrade, joinTrade } from "../../api/index.js";
-import * as chat from "../../chat/index.js";
-import { tradeState } from "../state.js";
-import { signComplete, signCompleteWithBody, submitComplete, cancelTrade } from "../domain.js";
-import type { SignatureInfo } from "../domain.js";
+import * as chat from "../../../application/chat/index.js";
+import { tradeState } from "../../../application/trade/state.js";
+import { signComplete, signCompleteWithBody, submitComplete, cancelTrade } from "../../../domain/trade/domain.js";
+import type { SignatureInfo } from "../../../domain/trade/domain.js";
 
 const pageCss = `
 :root {

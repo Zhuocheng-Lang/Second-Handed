@@ -1,15 +1,10 @@
 /**
- * 
- * 
- * api.js
+ * api.ts
  *
  * 职责：
  * - 所有 HTTP / WebSocket 通信
  * - 不做签名、不做加密、不理解业务
- *
  */
-
-import { loadIdentityKeyPair } from './crypto.js';
 
 // FastAPI 运行在 8000 端口，如果不是，自己改为实际后端地址
 
@@ -19,7 +14,7 @@ const API_BASE = "http://127.0.0.1:8000"; // 开发环境：指向 FastAPI 后�
  * HTTP 工具函数
  * */
 
-async function httpGet(path, options = {}) {
+async function httpGet(path: string, options: { headers?: Record<string, string> } = {}) {
   console.log(`[api] 发送GET请求: ${path}`);
   const res = await fetch(API_BASE + path, {
     method: "GET",
@@ -41,7 +36,7 @@ async function httpGet(path, options = {}) {
   return data;
 }
 
-async function httpPost(path, body) {
+async function httpPost(path: string, body: any) {
   console.log(`[api] 发送POST请求: ${path}, 请求数据:`, body);
   const res = await fetch(API_BASE + path, {
     method: "POST",
@@ -71,7 +66,7 @@ async function httpPost(path, body) {
  * 获取交易列表
  * GET /trade/list
  */
-export async function fetchTradeList() {
+export async function fetchTradeList(): Promise<any[]> {
   return httpGet("/trade/list");
 }
 
@@ -79,7 +74,7 @@ export async function fetchTradeList() {
  * 获取单个交易详情
  * GET /trade/{id}
  */
-export async function getTrade(tradeId) {
+export async function getTrade(tradeId: string): Promise<any> {
   if (!tradeId) {
     throw new Error("getTrade: tradeId required");
   }
@@ -92,7 +87,7 @@ export async function getTrade(tradeId) {
  *
  * payload 结构由 trade.js 负责
  */
-export async function createTrade(payload) {
+export async function createTrade(payload: any): Promise<any> {
   return httpPost("/trade/create", payload);
 }
 
@@ -100,7 +95,7 @@ export async function createTrade(payload) {
  * 加入交易
  * POST /trade/{id}/join
  */
-export async function joinTrade(tradeId, payload) {
+export async function joinTrade(tradeId: string, payload: any): Promise<any> {
   return httpPost(`/trade/${tradeId}/join`, payload);
 }
 
@@ -108,7 +103,7 @@ export async function joinTrade(tradeId, payload) {
  * 完成交易（双签）
  * POST /trade/complete
  */
-export async function completeTrade(payload) {
+export async function completeTrade(payload: any): Promise<any> {
   return httpPost("/trade/complete", payload);
 }
 
@@ -116,7 +111,7 @@ export async function completeTrade(payload) {
  * 取消交易
  * POST /trade/cancel
  */
-export async function cancelTrade(payload) {
+export async function cancelTrade(payload: any): Promise<any> {
   return httpPost("/trade/cancel", payload);
 }
 
@@ -125,8 +120,8 @@ export async function cancelTrade(payload) {
  * */
 
 // WebSocket 全局变量
-let chatSocket = null;
-let chatSocketCallbacks = [];
+let chatSocket: WebSocket | null = null;
+let chatSocketCallbacks: ((data: any) => void)[] = [];
 
 // 保留普通版的历史聊天消息获取函数，因为增强版的实现兼容已移除普通版的getChatHistory函数，使用增强版替代
 
@@ -135,13 +130,13 @@ let chatSocketCallbacks = [];
   */
 
 
-let currentTradeId = null;
-let currentIdentityPubkey = null;
+let currentTradeId: string | null = null;
+let currentIdentityPubkey: string | null = null;
 
 /**
  * 打开聊天 WebSocket 连接
  */
-export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMessage) {
+export async function openChatSocket(tradeId: string, identityPubkey: string, chatPubkey: string | null, onMessage: (data: any) => void): Promise<WebSocket> {
   if (!tradeId || !identityPubkey) {
     throw new Error("openChatSocket: tradeId and identityPubkey required");
   }
@@ -156,7 +151,7 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
   currentIdentityPubkey = identityPubkey;
 
   // 构建 WebSocket URL
-  let wsHost;
+  let wsHost: string;
   if (API_BASE) {
     try {
       wsHost = new URL(API_BASE).host;
@@ -176,6 +171,8 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
   return new Promise((resolve, reject) => {
     let resolved = false;
 
+    if (!chatSocket) return;
+
     chatSocket.onopen = async () => {
       console.log("[chat] WebSocket 连接已建立");
 
@@ -186,11 +183,11 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
         chat_pubkey: chatPubkey || null
       };
 
-      chatSocket.send(JSON.stringify(authMessage));
+      chatSocket?.send(JSON.stringify(authMessage));
       console.log("[chat] 发送认证信息");
     };
 
-    chatSocket.onmessage = (event) => {
+    chatSocket.onmessage = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
 
@@ -199,7 +196,7 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
           console.log('[chat] 收到认证响应:', data.success ? '成功' : '失败');
           if (data.success && !resolved) {
             resolved = true;
-            resolve(chatSocket);
+            resolve(chatSocket!);
           }
           return;
         }
@@ -240,7 +237,7 @@ export async function openChatSocket(tradeId, identityPubkey, chatPubkey, onMess
 /**
  * 发送聊天消息
  */
-export function sendChatMessage(message) {
+export function sendChatMessage(message: any): void {
   if (!chatSocket) {
     throw new Error("sendChatMessage: socket not initialized");
   }
@@ -255,7 +252,7 @@ export function sendChatMessage(message) {
 /**
  * 发送聊天文本消息
  */
-export function sendChatTextMessage(ciphertext, senderChatPubkey, buyerChatPubkey) {
+export function sendChatTextMessage(ciphertext: any, senderChatPubkey: string, buyerChatPubkey: string | null): void {
   const message = {
     type: "CHAT",
     trade_id: currentTradeId,
@@ -270,7 +267,7 @@ export function sendChatTextMessage(ciphertext, senderChatPubkey, buyerChatPubke
 /**
  * 发送JOIN消息
  */
-export function sendJoinMessage(chatPubkey) {
+export function sendJoinMessage(chatPubkey: string): void {
   const message = {
     type: "JOIN",
     trade_id: currentTradeId,
@@ -284,7 +281,7 @@ export function sendJoinMessage(chatPubkey) {
 /**
  * 关闭聊天连接
  */
-export function closeChatSocket() {
+export function closeChatSocket(): void {
   if (chatSocket) {
     chatSocket.close();
     chatSocket = null;
@@ -297,7 +294,7 @@ export function closeChatSocket() {
 /**
  * 获取聊天历史
  */
-export async function getChatHistory(tradeId, limit = 100) {
+export async function getChatHistory(tradeId: string, limit: number = 100): Promise<any[]> {
   if (!tradeId) {
     throw new Error("getChatHistory: tradeId required");
   }
@@ -309,7 +306,7 @@ export async function getChatHistory(tradeId, limit = 100) {
 /**
  * 获取聊天房间信息
  */
-export async function getChatRoomInfo(tradeId) {
+export async function getChatRoomInfo(tradeId: string): Promise<any> {
   if (!tradeId) {
     throw new Error("getChatRoomInfo: tradeId required");
   }
@@ -320,7 +317,7 @@ export async function getChatRoomInfo(tradeId) {
 /**
  * 获取交易聊天信息
  */
-export async function getTradeChatInfo(tradeId) {
+export async function getTradeChatInfo(tradeId: string): Promise<any> {
   if (!tradeId) {
     throw new Error("getTradeChatInfo: tradeId required");
   }
@@ -331,14 +328,14 @@ export async function getTradeChatInfo(tradeId) {
 /**
  * 导出区块链（原始 blocks 表）
  */
-export async function exportBlocks() {
+export async function exportBlocks(): Promise<any> {
   return httpGet("/blocks/export");
 }
 
 /**
  * 更新聊天公钥
  */
-export async function updateChatPubkey(tradeId, identityPubkey, chatPubkey) {
+export async function updateChatPubkey(tradeId: string, identityPubkey: string, chatPubkey: string): Promise<any> {
   return httpPost(`/trade/${tradeId}/update-chat-pubkey`, {
     identity_pubkey: identityPubkey,
     chat_pubkey: chatPubkey
@@ -348,6 +345,6 @@ export async function updateChatPubkey(tradeId, identityPubkey, chatPubkey) {
 /**
  * 获取对方的聊天公钥
  */
-export async function getPeerChatPubkey(tradeId, identityPubkey) {
+export async function getPeerChatPubkey(tradeId: string, identityPubkey: string): Promise<any> {
   return httpGet(`/trade/${tradeId}/peer-chat-pubkey/${identityPubkey}`);
 }

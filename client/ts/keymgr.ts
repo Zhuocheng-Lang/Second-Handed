@@ -1,5 +1,5 @@
 /**
- * keymgr.js
+ * keymgr.ts
  *
  * 身份 / 密钥管理（用户显式操作）
  *
@@ -22,7 +22,7 @@ import {
  * 生成新身份（覆盖）
  * ========================================================= */
 
-export async function generateNewIdentity() {
+export async function generateNewIdentity(): Promise<void> {
   const ok = confirm(
     "这将生成一套新的身份密钥，并覆盖当前身份。\n\n" +
     "⚠️ 如果你没有备份旧密钥，将永久失去之前的交易与身份。\n\n" +
@@ -40,7 +40,7 @@ export async function generateNewIdentity() {
  * 导出身份（JSON 文本）
  * ========================================================= */
 
-export async function exportIdentity() {
+export async function exportIdentity(): Promise<void> {
   const kp = await loadIdentityKeyPair();
   if (!kp) {
     alert("当前没有身份密钥");
@@ -57,7 +57,7 @@ export async function exportIdentity() {
  * 从文本导入身份
  * ========================================================= */
 
-export async function importIdentityFromPrompt() {
+export async function importIdentityFromPrompt(): Promise<void> {
   const text = prompt(
     "请粘贴之前导出的身份密钥（JSON 文本）："
   );
@@ -74,7 +74,7 @@ export async function importIdentityFromPrompt() {
 
     await saveIdentityKeyPair(kp);
     alert("✅ 身份导入成功");
-  } catch (e) {
+  } catch (e: any) {
     alert("❌ 导入失败：" + e.message);
   }
 }
@@ -83,7 +83,7 @@ export async function importIdentityFromPrompt() {
  * 显示当前身份指纹
  * ========================================================= */
 
-export async function showCurrentFingerprint() {
+export async function showCurrentFingerprint(): Promise<void> {
   const kp = await loadIdentityKeyPair();
   if (!kp) {
     alert("当前没有身份密钥");
@@ -98,7 +98,7 @@ export async function showCurrentFingerprint() {
  * 工具：下载文本文件
  * ========================================================= */
 
-function downloadText(filename, text) {
+function downloadText(filename: string, text: string): void {
   const blob = new Blob([text], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
@@ -109,3 +109,4 @@ function downloadText(filename, text) {
 
   URL.revokeObjectURL(url);
 }
+

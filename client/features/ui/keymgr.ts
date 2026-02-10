@@ -1,14 +1,3 @@
-/**
- * keymgr.ts
- *
- * 身份 / 密钥管理（用户显式操作）
- *
- * 设计原则：
- * - 所有危险操作都需要用户确认
- * - 不自动生成、不后台替换
- * - 不向其他模块暴露私钥
- */
-
 import {
   generateIdentityKeyPair,
   saveIdentityKeyPair,
@@ -16,11 +5,9 @@ import {
   exportIdentityKeyPair,
   importIdentityKeyPair,
   fingerprintPublicKey,
-} from "./crypto.js";
+} from "../crypto/index.js";
 
-/* =========================================================
- * 生成新身份（覆盖）
- * ========================================================= */
+import { downloadText } from "./download.js";
 
 export async function generateNewIdentity(): Promise<void> {
   const ok = confirm(
@@ -36,10 +23,6 @@ export async function generateNewIdentity(): Promise<void> {
   alert("✅ 新身份已生成，请立即导出并备份你的密钥。");
 }
 
-/* =========================================================
- * 导出身份（JSON 文本）
- * ========================================================= */
-
 export async function exportIdentity(): Promise<void> {
   const kp = await loadIdentityKeyPair();
   if (!kp) {
@@ -52,10 +35,6 @@ export async function exportIdentity(): Promise<void> {
 
   alert(" 身份已导出，请妥善保存该文件。");
 }
-
-/* =========================================================
- * 从文本导入身份
- * ========================================================= */
 
 export async function importIdentityFromPrompt(): Promise<void> {
   const text = prompt(
@@ -79,10 +58,6 @@ export async function importIdentityFromPrompt(): Promise<void> {
   }
 }
 
-/* =========================================================
- * 显示当前身份指纹
- * ========================================================= */
-
 export async function showCurrentFingerprint(): Promise<void> {
   const kp = await loadIdentityKeyPair();
   if (!kp) {
@@ -93,20 +68,3 @@ export async function showCurrentFingerprint(): Promise<void> {
   const fp = await fingerprintPublicKey(kp.publicKey);
   alert("你的身份指纹：\n\n" + fp);
 }
-
-/* =========================================================
- * 工具：下载文本文件
- * ========================================================= */
-
-function downloadText(filename: string, text: string): void {
-  const blob = new Blob([text], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-

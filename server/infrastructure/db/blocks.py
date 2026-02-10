@@ -1,12 +1,8 @@
-# db/blocks.py
+"""
+区块链数据持久化模块。
 
-
-# sql命令以后要优化
-# 1. 添加合适的索引
-# 2. 分页查询优化（避免SELECT *）
-# 3. 读写分离（如有需要）
-# 4. 定期清理日志和优化表
-
+负责区块记录的写入、获取和列表查询。
+"""
 
 from server.infrastructure.db.mysql import get_cursor
 from typing import Any, cast
@@ -14,7 +10,10 @@ from typing import Any, cast
 
 def insert_block(block: dict):
     """
-    写入新区块（append-only）
+    持久化存储新区块。
+
+    Args:
+        block: 区块信息字典。
     """
     sql = """
     INSERT INTO blocks (
@@ -42,13 +41,17 @@ def insert_block(block: dict):
 
 
 def get_last_block() -> dict[str, Any] | None:
+    """
+    获取最新的区块。
+
+    Returns:
+        Optional[dict]: 最新区块信息字典。
+    """
     sql = """
     SELECT * FROM blocks
     ORDER BY block_index DESC
     LIMIT 1
     """
-
-    # sql命令是以后要优化的
 
     with get_cursor() as cursor:
         cursor.execute(sql)
@@ -57,6 +60,15 @@ def get_last_block() -> dict[str, Any] | None:
 
 
 def get_blocks_since(index: int) -> list[dict[str, Any]]:
+    """
+    获取指定索引之后的所有区块。
+
+    Args:
+        index: 起始区块索引。
+
+    Returns:
+        list[dict]: 区块信息列表。
+    """
     sql = """
     SELECT * FROM blocks
     WHERE block_index > %s
@@ -71,7 +83,10 @@ def get_blocks_since(index: int) -> list[dict[str, Any]]:
 
 def get_all_blocks() -> list[dict[str, Any]]:
     """
-    获取所有区块（按 block_index 升序）
+    获取区块链中所有的区块。
+
+    Returns:
+        list[dict]: 按索引升序排列的所有区块列表。
     """
     sql = """
     SELECT * FROM blocks

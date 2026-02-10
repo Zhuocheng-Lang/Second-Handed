@@ -1,4 +1,8 @@
-# backend/api/trade_api.py
+"""
+交易路由模块。
+
+定义处理交易相关请求的 HTTP 端点，包括列出交易、获取详情、创建、完成、取消以及加入交易等。
+"""
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -27,13 +31,13 @@ from server.interfaces.http.schemas.trade import (
 router = APIRouter(prefix="/trade")
 
 
-# GET —— 获取交易列表------list
-
-
 @router.get("/list", response_model=TradeListResponse)
 async def get_trade_list():
     """
-    获取交易列表
+    获取交易列表。
+
+    Returns:
+        TradeListResponse: 包含前 50 条交易记录的响应对象。
     """
     trades = trade_service.list_trade_records(limit=50)
     # 转换数据库格式为 API 格式
@@ -43,13 +47,19 @@ async def get_trade_list():
     return {"data": result}
 
 
-# GET —— 获取单个交易 /id
-
-
 @router.get("/{trade_id}", response_model=TradeDetail)
 async def get_single_trade(trade_id: str):
     """
-    获取单个交易详情
+    获取单个交易的详细详情。
+
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        TradeDetail: 交易详情响应。
+
+    Raises:
+        HTTPException: 未找到指定交易时抛出 404 错误。
     """
     trade = trade_service.get_trade_record(trade_id)
     if trade is None:
@@ -58,17 +68,18 @@ async def get_single_trade(trade_id: str):
     return _serialize_trade(trade)
 
 
-# CREATE —— 创建交易
 @router.post("/create", response_model=OperationStatus)
 async def create_trade(payload: TradeCreateRequest):
     """
-    创建交易
+    提交并创建新交易。
 
-    前端必须提供：
-    - trade_id
-    - content_hash
-    - seller_pubkey
-    - signature
+    验证前端提交的哈希和卖家签名，验证通过后写入区块链。
+
+    Args:
+        payload: 创建交易的请求体。
+
+    Returns:
+        OperationStatus: 操作状态响应。
     """
 
     try:
@@ -102,13 +113,15 @@ async def create_trade(payload: TradeCreateRequest):
 @router.post("/complete", response_model=OperationStatus)
 async def complete_trade(payload: TradeCompleteRequest):
     """
-    完成交易（卖家 + 买家双签）
+    提交并完成交易（双签验证）。
 
-    前端必须提供：
-    - trade_id
-    - complete_hash
-    - seller_signature
-    - buyer_signature
+    验证卖家和买家的双重签名，验证通过后写入 COMPLETE 类型区块。
+
+    Args:
+        payload: 包含交易 ID、哈希及双方签名的请求体。
+
+    Returns:
+        OperationStatus: 操作状态响应。
     """
 
     try:
@@ -126,18 +139,18 @@ async def complete_trade(payload: TradeCompleteRequest):
     return {"status": "ok"}
 
 
-# CANCEL —— 取消交易（卖家单签）
-
-
 @router.post("/cancel", response_model=OperationStatus)
 async def cancel_trade(payload: TradeCancelRequest):
     """
-    取消交易（仅卖家）
+    提交并取消交易（卖家单签）。
 
-    前端必须提供：
-    - trade_id
-    - cancel_hash
-    - seller_signature
+    仅允许卖家对未完成交易发起取消操作。
+
+    Args:
+        payload: 包含交易 ID、取消哈希及卖家签名的请求体。
+
+    Returns:
+        OperationStatus: 操作状态响应。
     """
 
     try:
@@ -154,13 +167,17 @@ async def cancel_trade(payload: TradeCancelRequest):
     return {"status": "ok"}
 
 
-# JOIN —— 买家加入交易
-
-
 @router.post("/{trade_id}/join", response_model=dict)
 async def join_trade_api(trade_id: str, payload: TradeJoinRequest):
     """
-    买家加入交易（写入 buyer_pubkey）
+    记录买家加入指定交易。
+
+    Args:
+        trade_id: 交易 ID。
+        payload: 包含买家身份公钥的请求体。
+
+    Returns:
+        dict: 操作成功确认。
     """
     try:
         trade_service.join_trade(
@@ -180,7 +197,13 @@ async def join_trade_api(trade_id: str, payload: TradeJoinRequest):
 @router.get("/{trade_id}/chat-info", response_model=TradeChatInfo)
 async def get_trade_chat_info_api(trade_id: str):
     """
-    获取交易的聊天相关信息
+    获取交易的聊天室配置信息。
+
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        TradeChatInfo: 聊天相关参数信息。
     """
     try:
         chat_info = get_trade_chat_info(trade_id)
@@ -194,7 +217,14 @@ async def get_trade_chat_info_api(trade_id: str):
 @router.post("/{trade_id}/update-chat-pubkey", response_model=dict)
 async def update_chat_pubkey_api(trade_id: str, payload: ChatPubkeyUpdateRequest):
     """
-    更新用户的聊天公钥
+    更新参与者的聊天公钥。
+
+    Args:
+        trade_id: 交易 ID。
+        payload: 包含身份公钥和新聊天公钥的请求体。
+
+    Returns:
+        dict: 更新结果描述。
     """
     identity_pubkey = payload.identity_pubkey
     chat_pubkey = payload.chat_pubkey
@@ -209,7 +239,14 @@ async def update_chat_pubkey_api(trade_id: str, payload: ChatPubkeyUpdateRequest
 @router.get("/{trade_id}/peer-chat-pubkey/{identity_pubkey}", response_model=dict)
 async def get_peer_chat_pubkey_api(trade_id: str, identity_pubkey: str):
     """
-    获取对方的聊天公钥
+    获取交易对方的聊天公钥。
+
+    Args:
+        trade_id: 交易 ID。
+        identity_pubkey: 调用者的身份公钥。
+
+    Returns:
+        dict: 包含对方聊天公钥的响应。
     """
     try:
         peer_chat_pubkey = get_peer_chat_pubkey(trade_id, identity_pubkey)
@@ -219,6 +256,7 @@ async def get_peer_chat_pubkey_api(trade_id: str, identity_pubkey: str):
 
 
 def _serialize_trade(trade: dict) -> dict:
+    """内部工具：将数据库记录转换为接口数据格式。"""
     return {
         "trade_id": trade["trade_id"],
         "seller_pubkey": trade["seller_pubkey"],

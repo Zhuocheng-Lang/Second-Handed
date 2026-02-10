@@ -1,4 +1,8 @@
-# backend/services/chat_service.py
+"""
+聊天服务模块。
+
+负责管理聊天室、分发实时消息以及通过代理(broker)协调多个服务器实例间的消息同步。
+"""
 
 import asyncio
 import logging
@@ -14,17 +18,24 @@ _rooms: dict[str, list[tuple]] = {}
 _broker: BaseChatBroker = NoopChatBroker()
 _broker_id = uuid4().hex
 
-# -----------------------------
-# 加入聊天室
-# -----------------------------
-
 
 def set_broker(broker: BaseChatBroker) -> None:
+    """
+    设置全局聊天代理实例。
+
+    Args:
+        broker: 实现了 BaseChatBroker 接口的代理实例。
+    """
     global _broker
     _broker = broker
 
 
 async def run_broker_listener() -> None:
+    """
+    启动代理消息监听器。
+
+    持续接收来自代理的消息并处理，直到被取消或发生异常。
+    """
     try:
         await _broker.listen(_handle_broker_message)
     except asyncio.CancelledError:
@@ -37,7 +48,13 @@ async def join_room(
     trade_id: str, conn, identity_pubkey: str, chat_pubkey: str | None = None
 ):
     """
-    将一个连接加入指定 trade_id 的聊天室
+    将用户连接加入指定的交易聊天室。
+
+    Args:
+        trade_id: 交易 ID。
+        conn: 物理连接对象（如 WebSocketConnection）。
+        identity_pubkey: 用户身份公钥。
+        chat_pubkey: 可选，该用户的聊天公钥。
     """
     if trade_id not in _rooms:
         _rooms[trade_id] = []
@@ -61,14 +78,13 @@ async def join_room(
     await broadcast_join(trade_id, identity_pubkey, chat_pubkey)
 
 
-# -----------------------------
-#  离开聊天室
-# -----------------------------
-
-
 async def leave_room(trade_id: str, conn):
     """
-    将一个连接从聊天室中移除
+    将用户连接从指定的交易聊天室中移除。
+
+    Args:
+        trade_id: 交易 ID。
+        conn: 之前加入的物理连接对象。
     """
     if trade_id not in _rooms:
         return
@@ -95,16 +111,16 @@ async def leave_room(trade_id: str, conn):
         del _rooms[trade_id]
 
 
-# -----------------------------
-# 广播 JOIN 消息
-# -----------------------------
-
-
 async def broadcast_join(
     trade_id: str, identity_pubkey: str, chat_pubkey: str | None = None
 ):
     """
-    广播用户加入消息
+    广播用户加入聊天室的消息。
+
+    Args:
+        trade_id: 交易 ID。
+        identity_pubkey: 用户身份公钥。
+        chat_pubkey: 可选，该用户的聊天公钥。
     """
     if trade_id not in _rooms:
         return
@@ -120,17 +136,19 @@ async def broadcast_join(
     await _emit(trade_id, join_message)
 
 
-# -----------------------------
-# 中继密文消息
-# -----------------------------
-
-
 async def relay(
     trade_id: str, ciphertext: str, sender_chat_pubkey: str, buyer_chat_pubkey: str
 ):
     """
-    将密文消息广播给同一 trade_id 下的所有连接
-    同时将消息保存到数据库
+    中继密文消息给相关参与者。
+
+    将收到的加密消息分发给所有连接，并持久化到数据库。
+
+    Args:
+        trade_id: 交易 ID。
+        ciphertext: 加密的消息内容。
+        sender_chat_pubkey: 发送者的聊天公钥。
+        buyer_chat_pubkey: 交易买家的聊天公钥（用于数据库索引/检索）。
     """
     if trade_id not in _rooms:
         return
@@ -153,14 +171,17 @@ async def relay(
     await _emit(trade_id, message)
 
 
-# -----------------------------
-# 获取房间信息
-# -----------------------------
-
-
 async def get_room_info(trade_id: str):
     """
-    获取房间信息
+    获取指定聊天室的当前状态和参与者信息。
+
+    优先尝试通过代理获取在线参与者列表，若不可用则使用本地缓存。
+
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        list[dict]: 参与者的状态信息列表。
     """
     participants = await _broker.get_participants(trade_id)
     if participants:
@@ -183,26 +204,26 @@ async def get_room_info(trade_id: str):
     ]
 
 
-# -----------------------------
-# 获取历史消息
-# -----------------------------
-
-
 def get_chat_history(trade_id: str, limit: int = 100):
     """
-    获取聊天历史
+    获取指定交易的历史聊天消息记录。
+
+    Args:
+        trade_id: 交易 ID。
+        limit: 限制返回消息的最大数量，默认 100。
+
+    Returns:
+        list[dict]: 历史聊天消息列表。
     """
     return get_messages(trade_id, limit)
 
 
-# -----------------------------
-# 工具函数
-# -----------------------------
-
-
 def get_current_timestamp():
     """
-    获取当前时间戳
+    获取当前的 UNIX 时间戳。
+
+    Returns:
+        int: 当前时间的秒级时间戳。
     """
     import time
 
@@ -210,6 +231,7 @@ def get_current_timestamp():
 
 
 async def _emit(trade_id: str, message: dict) -> None:
+    """内部函数：分发消息到本地并发布到代理。"""
     await _broadcast_local(trade_id, dict(message))
     publish_message = dict(message)
     publish_message["origin_id"] = _broker_id
@@ -217,6 +239,7 @@ async def _emit(trade_id: str, message: dict) -> None:
 
 
 async def _handle_broker_message(trade_id: str, message: dict) -> None:
+    """回调函数：处理来自代理的消息。"""
     if message.get("origin_id") == _broker_id:
         return
     clean_message = dict(message)
@@ -225,6 +248,7 @@ async def _handle_broker_message(trade_id: str, message: dict) -> None:
 
 
 async def _broadcast_local(trade_id: str, message: dict) -> None:
+    """内部函数：将消息广播给本地所有活跃的 WebSocket 连接。"""
     if trade_id not in _rooms:
         return
 

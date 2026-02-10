@@ -1,3 +1,9 @@
+"""
+HTTP 接口应用模块。
+
+负责初始化 FastAPI 应用实例，配置中间件、生命周期管理和路由挂载。
+"""
+
 from contextlib import asynccontextmanager
 import asyncio
 
@@ -19,34 +25,53 @@ from server.infrastructure.messaging.redis_chat_broker import RedisChatBroker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    FastAPI 应用生命周期管理。
+
+    在应用启动时初始化日志、配置消息代理并启动监听任务；
+    在应用关闭时取消任务并关闭代理连接。
+    """
     settings = get_settings()
     configure_logging(settings.log_level)
 
-    if settings.chat_broker_enabled:
-        broker = RedisChatBroker(settings.redis_url)
-    else:
-        broker = NoopChatBroker()
+    broker = NoopChatBroker()
+    listener_task = None
 
-    await broker.connect()
+    if settings.chat_broker_enabled:
+        try:
+            broker = RedisChatBroker(settings.redis_url)
+            await broker.connect()
+        except Exception as e:
+            import logging
+            logger = logging.getLogger("server.app")
+            logger.error(f"Failed to connect to Redis chat broker: {e}. Chat features will be disabled.")
+            broker = NoopChatBroker()
+
     chat_service.set_broker(broker)
-    listener_task = asyncio.create_task(chat_service.run_broker_listener())
+    
+    if isinstance(broker, RedisChatBroker):
+        listener_task = asyncio.create_task(chat_service.run_broker_listener())
 
     app.state.chat_broker = broker
     app.state.chat_listener_task = listener_task
     try:
         yield
     finally:
-        listener_task.cancel()
-        try:
-            await listener_task
-        except asyncio.CancelledError:
-            pass
+        if listener_task:
+            listener_task.cancel()
+            try:
+                await listener_task
+            except asyncio.CancelledError:
+                pass
         await broker.close()
 
 
 def create_app() -> FastAPI:
     """
-    创建并配置 Web 应用
+    创建并配置 Web 应用程序实例。
+
+    Returns:
+        FastAPI: 已初始化的应用程序对象。
     """
     settings = get_settings()
     app = FastAPI(
@@ -55,13 +80,13 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # 添加CORS中间件，确保在所有路由处理之前生效
+    # 添加 CORS 中间件，允许跨域请求
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],  # 允许所有HTTP方法
-        allow_headers=["*"],  # 允许所有HTTP头
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     register_routes(app)
@@ -71,7 +96,10 @@ def create_app() -> FastAPI:
 
 def register_routes(app: FastAPI) -> None:
     """
-    把 trade_api / chat_api 挂上去
+    注册系统路由。
+
+    Args:
+        app: FastAPI 应用程序实例。
     """
     app.include_router(trade_router)
     app.include_router(chat_ws_router)

@@ -1,4 +1,8 @@
-# backend/api/chat_api.py
+"""
+聊天路由模块。
+
+包含处理实时聊天通信的 WebSocket 端点，以及获取历史消息和房间信息的 HTTP 接口。
+"""
 
 import asyncio
 import json
@@ -24,7 +28,18 @@ logger = logging.getLogger(__name__)
 @router.websocket("/{trade_id}")
 async def chat_websocket(websocket: WebSocket, trade_id: str):
     """
-    交易聊天的WebSocket端点
+    处理指定交易的 WebSocket 实时聊天连接。
+
+    工作流程：
+    1. 接受 WebSocket 连接并验证 trade_id 是否有效。
+    2. 等待并验证来自客户端的 'auth' 认证消息。
+    3. 将连接加入对应的聊天房间，并开启消息循环。
+    4. 处理接收到的 CHAT（私聊）、JOIN（加入）和 PING（心跳）消息。
+    5. 在断开连接或发生错误时退出房间。
+
+    Args:
+        websocket: WebSocket 连接实例。
+        trade_id: 交易 ID。
     """
     # 1. 接受WebSocket连接
     await websocket.accept()
@@ -134,9 +149,16 @@ async def chat_websocket(websocket: WebSocket, trade_id: str):
 
 
 @http_router.get("/history/{trade_id}", response_model=ChatHistoryResponse)
-async def get_chat_history(trade_id: str, limit: int = 100):
+async def get_chat_history_api(trade_id: str, limit: int = 100):
     """
-    获取交易的历史聊天消息
+    获取指定交易的历史聊天记录。
+
+    Args:
+        trade_id: 交易 ID。
+        limit: 限制返回消息的最大数量，默认 100。
+
+    Returns:
+        ChatHistoryResponse: 包含历史消息列表的响应。
     """
     try:
         messages = chat_service.get_chat_history(trade_id, limit)
@@ -167,7 +189,13 @@ async def get_chat_history(trade_id: str, limit: int = 100):
 @http_router.get("/room/{trade_id}", response_model=ChatRoomInfoResponse)
 async def get_chat_room_info(trade_id: str):
     """
-    获取聊天房间信息
+    获取指定聊天房间的参与者及统计信息。
+
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        ChatRoomInfoResponse: 包含参与者列表和人数的响应。
     """
     try:
         room_info = await chat_service.get_room_info(trade_id)

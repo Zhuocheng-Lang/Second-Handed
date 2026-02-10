@@ -1,4 +1,8 @@
-# backend/services/blockchain.py
+"""
+区块链服务模块。
+
+负责区块链的逻辑操作，包括生成区块、计算区块哈希以及维护链的完整性。
+"""
 
 import time
 import hashlib
@@ -11,14 +15,12 @@ from server.infrastructure.db.blocks import (
 )
 
 
-# -----------------------------
-#  获取最新区块
-# -----------------------------
-
-
 def get_latest_block():
     """
-    返回链上的最后一个区块
+    获取区块链上的最后一个区块。
+
+    Returns:
+        Optional[dict]: 格式化后的最新区块信息，如果链为空则返回 None。
     """
     block = get_last_block()
     if block is None:
@@ -37,14 +39,20 @@ def get_latest_block():
 
 def get_raw_blocks():
     """
-    获取原始 blocks 表数据
+    获取数据库中存储的原始区块数据列表。
+
+    Returns:
+        list[dict]: 原始区块记录列表。
     """
     return db_get_all_blocks()
 
 
 def get_all_blocks():
     """
-    获取所有区块（用于 rebuild_state）
+    获取并转换所有区块信息，通常用于重建系统状态。
+
+    Returns:
+        list[dict]: 包含类型、交易 ID、负载和签名的区块列表。
     """
     blocks = []
     for block in db_get_all_blocks():
@@ -61,14 +69,17 @@ def get_all_blocks():
     return blocks
 
 
-# -----------------------------
-#  计算区块 hash
-# -----------------------------
-
-
 def compute_block_hash(block):
     """
-    hash(index + prev_hash + payload + timestamp)
+    计算给定区块数据的 SHA-256 哈希值。
+
+    哈希对象由索引、前一个区块哈希、负载内容和时间戳拼接而成。
+
+    Args:
+        block: 包含 index, prev_hash, payload 和 timestamp 的区块字典。
+
+    Returns:
+        str: 计算得到的十六进制哈希字符串。
     """
     block_string = (
         str(block["index"])
@@ -80,23 +91,20 @@ def compute_block_hash(block):
     return hashlib.sha256(block_string.encode()).hexdigest()
 
 
-# -----------------------------
-# 追加新区块
-# -----------------------------
-
-
 def append_block(block_data):
     """
-    校验 prev_hash
-    写入 blocks 表
+    追加新区块到区块链中。
 
-    block_data 格式：
-    {
-        "type": "CREATE" | "COMPLETE" | "CANCEL",
-        "trade_id": "...",
-        "payload": {...},
-        "signatures": {...}
-    }
+    该过程包括验证前一个区块的哈希、构造完整负载、计算当前区块哈希并持久化到数据库。
+
+    Args:
+        block_data: 初始区块数据，需包含 type, trade_id, payload, signatures。
+
+    Returns:
+        dict: 最终写入数据库的完整区块数据。
+
+    Raises:
+        Exception: 当区块链哈希链断裂或校验失败时抛出。
     """
     last_block = get_latest_block()
 

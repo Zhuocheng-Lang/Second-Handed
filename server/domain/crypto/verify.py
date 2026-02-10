@@ -1,16 +1,11 @@
 """
-后端验签工具
+加密验证领域逻辑模块。
 
-
- 前端公钥：Base64（raw Ed25519 public key）
- 前端私钥：Base64（PKCS8）
- 前端 hash：十六进制字符串（SHA-256）
- 前端签名：Base64（Ed25519 签名）
-
-因此后端在验签时，需要：
- 公钥：Base64 转 bytes
- 签名：Base64 转 bytes
- hash：hex 转 bytes
+负责 Ed25519 签名的验证，对接前端生成的加密数据。
+参数对应关系：
+- 公钥：Base64 编码的 Ed25519 原始公钥。
+- 哈希：十六进制编码的 SHA-256 摘要。
+- 签名：Base64 编码的 Ed25519 签名。
 """
 
 import base64
@@ -19,21 +14,26 @@ from cryptography.exceptions import InvalidSignature
 
 
 def _b64_to_bytes(data: str) -> bytes:
+    """内部函数：将 Base64 字符串转换为字节序列。"""
     return base64.b64decode(data.encode("utf-8"))
 
 
 def _hex_to_bytes(data: str) -> bytes:
+    """内部函数：将十六进制字符串转换为字节序列。"""
     return bytes.fromhex(data)
 
 
 def verify_signature(pubkey: str, hash: str, signature: str) -> bool:
     """
-    验证：signature 是否是 pubkey 对 hash 的签名
+    验证给定的签名是否是通过私钥对特定哈希值签署的。
 
-    参数格式（与前端保持一致）：
-    - pubkey: Base64 编码的 Ed25519 公钥（crypto.js 里的 publicKey）
-    - hash: 十六进制字符串（crypto.js.hash 返回值）
-    - signature: Base64 编码的签名（crypto.js.sign 返回值）
+    Args:
+        pubkey: Base64 编码的 Ed25519 公钥。
+        hash: 十六进制字符串表示的哈希值。
+        signature: Base64 编码的签名。
+
+    Returns:
+        bool: 验证成功返回 True，否则返回 False。
     """
     try:
         pk_bytes = _b64_to_bytes(pubkey)

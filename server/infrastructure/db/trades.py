@@ -1,7 +1,8 @@
-# db/trades.py - 交易数据库操作模块
+"""
+交易数据库操作模块。
 
-# 提供交易相关的数据库CRUD操作
-
+提供交易相关的数据库 CRUD 操作。
+"""
 
 import json
 import logging
@@ -13,16 +14,19 @@ logger = logging.getLogger(__name__)
 
 def insert_trade(trade: dict):
     """
-    创建新交易记录
+    创建新交易记录。
 
-    在CREATE交易时调用，将交易信息插入到数据库中
+    在创建交易时调用，将交易信息插入到数据库中。
 
-    注意：根据项目设计，聊天密钥通过ECDH派生，不需要存储在数据库中。
-    如果数据库表中有seller_chat_pubkey或buyer_chat_pubkey字段，
+    注意：根据项目设计，聊天密钥通过 ECDH 派生，不需要存储在数据库中。
+    如果数据库表中有 seller_chat_pubkey 或 buyer_chat_pubkey 字段，
     应该将其设为可空或删除。
 
-    @param trade: 交易信息字典
-    @raises Exception: 数据库操作失败时抛出异常
+    Args:
+        trade: 交易信息字典。
+
+    Raises:
+        Exception: 数据库操作失败时抛出。
     """
     logger.info("开始插入新交易，交易ID: %s", trade.get("trade_id"))
 
@@ -73,13 +77,14 @@ def insert_trade(trade: dict):
 
 def update_trade_status(trade_id: str, status: str, buyer_pubkey: str | None = None):
     """
-    更新交易状态
+    更新交易状态。
 
-    在交易完成(COMPLETE)或取消(CANCEL)时调用
+    在交易完成 (COMPLETE) 或取消 (CANCEL) 时调用。
 
-    @param trade_id: 交易ID
-    @param status: 新状态
-    @param buyer_pubkey: 买家公钥
+    Args:
+        trade_id: 交易 ID。
+        status: 新状态。
+        buyer_pubkey: 买家公钥。
     """
     logger.info("更新交易状态，交易ID: %s, 新状态: %s", trade_id, status)
 
@@ -98,10 +103,13 @@ def update_trade_status(trade_id: str, status: str, buyer_pubkey: str | None = N
 
 def get_trade(trade_id: str) -> dict[str, Any] | None:
     """
-    获取交易详情
+    获取交易详情。
 
-    @param trade_id: 交易ID
-    @return: 交易信息字典，如果不存在则返回None
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        Optional[dict]: 交易信息字典，如果不存在则返回 None。
     """
     logger.info("获取交易详情，交易ID: %s", trade_id)
 
@@ -116,10 +124,13 @@ def get_trade(trade_id: str) -> dict[str, Any] | None:
 
 def list_trades(limit: int = 50) -> list[dict[str, Any]]:
     """
-    获取交易列表
+    获取交易列表。
 
-    @param limit: 返回的最大交易数量，默认50
-    @return: 交易列表
+    Args:
+        limit: 返回的最大交易数量，默认 50。
+
+    Returns:
+        list[dict]: 交易列表。
     """
     logger.info("获取交易列表，限制: %s", limit)
 
@@ -138,9 +149,9 @@ def list_trades(limit: int = 50) -> list[dict[str, Any]]:
 
 def clear_trades():
     """
-    清空交易表
+    清空交易表。
 
-    用于系统重建或测试环境清理
+    用于系统重建或测试环境清理。
     """
     logger.warning("清空交易表")
 
@@ -153,11 +164,12 @@ def clear_trades():
 
 def update_trade_join(trade_id: str, buyer_pubkey: str, buyer_chat_pubkey: dict):
     """
-    更新交易信息，记录买家加入
+    更新交易信息，记录买家加入。
 
-    @param trade_id: 交易ID
-    @param buyer_pubkey: 买家身份公钥
-    @param buyer_chat_pubkey: 买家聊天公钥
+    Args:
+        trade_id: 交易 ID。
+        buyer_pubkey: 买家身份公钥。
+        buyer_chat_pubkey: 买家聊天公钥。
     """
     logger.info("更新交易，买家加入，交易ID: %s", trade_id)
 
@@ -185,12 +197,13 @@ def update_trade_chat_pubkey(
     trade_id: str, identity_pubkey: str, chat_pubkey: str, is_seller: bool
 ):
     """
-    更新交易的聊天公钥
+    更新交易的聊天公钥。
 
-    @param trade_id: 交易ID
-    @param identity_pubkey: 用户身份公钥（用于验证权限）
-    @param chat_pubkey: 聊天公钥
-    @param is_seller: 是否为卖家
+    Args:
+        trade_id: 交易 ID。
+        identity_pubkey: 用户身份公钥（用于验证权限）。
+        chat_pubkey: 聊天公钥。
+        is_seller: 是否为卖家。
     """
     logger.info(
         "更新交易聊天公钥，交易ID: %s, 用户角色: %s",
@@ -220,10 +233,13 @@ def update_trade_chat_pubkey(
 
 def get_trade_with_chat_info(trade_id: str) -> dict[str, Any] | None:
     """
-    获取包含聊天信息的交易详情
+    获取包含聊天信息的交易详情。
 
-    @param trade_id: 交易ID
-    @return: 包含聊天公钥的交易信息字典
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        Optional[dict]: 包含聊天公钥的交易信息字典。
     """
     logger.info("获取包含聊天信息的交易详情，交易ID: %s", trade_id)
 

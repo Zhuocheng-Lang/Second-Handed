@@ -1,13 +1,11 @@
-# backend/services/trade_service.py
-
 """
+交易应用服务模块。
 
-验证交易合法性
-维护交易状态机
-决定是否写新区块
-
-前端生成 hash + signature
-后端只做 verify + state machine
+负责验证交易合法性、维护交易状态机以及协调区块写入。
+核心逻辑包括：
+1. 验证前端生成的哈希和签名。
+2. 管理交易从创建到完成或取消的状态转换。
+3. 将有效的交易操作作为区块追加到区块链中。
 """
 
 from server.domain.crypto.verify import verify_signature
@@ -24,10 +22,6 @@ from server.infrastructure.db.trades import (
     get_trade_with_chat_info,
 )
 
-# ============================================================
-#  CREATE —— 创建交易
-# ============================================================
-
 
 def verify_create(
     trade_id: str,
@@ -38,11 +32,23 @@ def verify_create(
     price=None,
 ):
     """
-    验证创建交易是否合法
+    验证创建交易请求是否合法。
 
-    前端保证：
-    - trade_id = hash(CreateTradeBody)
-    - signature = Sign(trade_id, seller_sk)
+    前端需保证 trade_id 等于创建体哈希，且签名由卖家私钥对 trade_id 签署。
+
+    Args:
+        trade_id: 交易 ID（由前端计算的哈希）。
+        content_hash: 交易内容的哈希。
+        seller_pubkey: 卖家的身份公钥。
+        signature: 卖家的签名字符串。
+        description: 可选，交易描述。
+        price: 可选，价格。
+
+    Returns:
+        dict: 构造好的 CREATE 类型区块数据。
+
+    Raises:
+        Exception: 交易已存在或卖家签名验证失败。
     """
 
     # 1. trade_id 必须唯一
@@ -75,11 +81,6 @@ def verify_create(
     return block
 
 
-# ============================================================
-#  COMPLETE —— 完成交易（双签）
-# ============================================================
-
-
 def verify_complete(
     trade_id: str,
     complete_hash: str,
@@ -87,9 +88,21 @@ def verify_complete(
     buyer_sig: str,
 ):
     """
-    验证完成交易是否合法
+    验证完成交易请求是否合法。
 
-    complete_hash 由前端生成并传入
+    验证买卖双方对交易完成确认哈希的签名。
+
+    Args:
+        trade_id: 交易 ID。
+        complete_hash: 由前端生成的完成交易哈希。
+        seller_sig: 卖家的签名数据。
+        buyer_sig: 买家的签名数据。
+
+    Returns:
+        dict: 构造好的 COMPLETE 类型区块数据。
+
+    Raises:
+        Exception: 交易不存在、状态非法或任一方签名验证失败。
     """
 
     trade = get_trade(trade_id)
@@ -137,18 +150,26 @@ def verify_complete(
     return block
 
 
-# ============================================================
-#  CANCEL —— 取消交易（卖家单签）
-# ============================================================
-
-
 def verify_cancel(
     trade_id: str,
     cancel_hash: str,
     seller_sig: str,
 ):
     """
-    验证取消交易是否合法
+    验证取消交易请求是否合法。
+
+    仅允许卖家发起取消操作，并验证卖家签名。
+
+    Args:
+        trade_id: 交易 ID。
+        cancel_hash: 由前端生成的取消交易哈希。
+        seller_sig: 卖家的签名数据。
+
+    Returns:
+        dict: 构造好的 CANCEL 类型区块数据。
+
+    Raises:
+        Exception: 交易不存在、状态非法、哈希不匹配或卖家签名验证失败。
     """
 
     trade = get_trade(trade_id)
@@ -197,14 +218,14 @@ def verify_cancel(
     return block
 
 
-# ============================================================
-#  写区块 & 更新状态（唯一的状态变更入口）
-# ============================================================
-
-
 def apply_block(block: dict):
     """
-    写新区块，并同步更新 trades 状态表
+    应用并持久化区块。
+
+    将区块追加到区块链，并同步更新交易状态表。这是修改系统状态的唯一入口。
+
+    Args:
+        block: 待应用的区块数据字典。
     """
 
     # 1. 追加区块（append-only）
@@ -233,18 +254,11 @@ def apply_block(block: dict):
         update_trade_status(trade_id, "CANCELLED")
 
 
-# ============================================================
-#  从区块重建状态（只用于初始化 / 修复）
-# ============================================================
-
-
 def rebuild_state():
     """
-    从 blocks 表重建 trades 状态
+    从区块链数据重建交易状态。
 
-     重要：
-    - 只更新 trades
-    - 绝不重新 append_block
+    清空当前交易表并遍历所有区块，仅用于系统初始化或修复。
     """
     from server.infrastructure.db.trades import clear_trades
 
@@ -273,7 +287,12 @@ def rebuild_state():
 
 def join_trade(trade_id: str, buyer_pubkey: str, buyer_chat_pubkey: dict | None = None):
     """
-    买家正式加入交易
+    更新交易信息，记录买家加入。
+
+    Args:
+        trade_id: 交易 ID。
+        buyer_pubkey: 买家身份公钥。
+        buyer_chat_pubkey: 可选，买家聊天公钥。
     """
     if buyer_chat_pubkey is None:
         buyer_chat_pubkey = {}
@@ -287,21 +306,39 @@ def join_trade(trade_id: str, buyer_pubkey: str, buyer_chat_pubkey: dict | None 
 
 def get_trade_detail(trade_id: str):
     """
-    获取交易详情（包含聊天公钥信息）
+    获取交易的详细信息（包含聊天相关的公钥）。
+
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        dict: 交易详情字典。
     """
     return get_trade_with_chat_info(trade_id)
 
 
 def get_trade_record(trade_id: str):
     """
-    获取交易记录（原始数据库字段）
+    获取交易的基础数据库记录。
+
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        dict: 原始数据库记录字典。
     """
     return get_trade(trade_id)
 
 
 def list_trade_records(limit: int = 50):
     """
-    获取交易列表（原始数据库字段）
+    获取交易记录列表。
+
+    Args:
+        limit: 返回记录的最大数量，默认 50。
+
+    Returns:
+        list[dict]: 交易记录列表。
     """
     return db_list_trades(limit=limit)
 
@@ -312,7 +349,13 @@ def list_trade_records(limit: int = 50):
 
 def get_trade_chat_info(trade_id: str):
     """
-    获取交易的聊天相关信息
+    获取交易的聊天配置信息。
+
+    Args:
+        trade_id: 交易 ID。
+
+    Returns:
+        Optional[dict]: 包含买卖双方公钥及状态的信息，未找到交易则返回 None。
     """
     trade = get_trade(trade_id)
     if trade is None:
@@ -331,7 +374,20 @@ def get_trade_chat_info(trade_id: str):
 
 def update_chat_pubkey(trade_id: str, identity_pubkey: str, chat_pubkey: str):
     """
-    更新用户的聊天公钥
+    更新交易参与者的聊天公钥。
+
+    根据身份公钥识别参与者角色并更新相应的聊天公钥。
+
+    Args:
+        trade_id: 交易 ID。
+        identity_pubkey: 参与者的身份公钥。
+        chat_pubkey: 该参与者的新聊天公钥。
+
+    Returns:
+        dict: 更新成功状态。
+
+    Raises:
+        Exception: 交易不存在或该用户不是交易的有效参与方。
     """
     trade = get_trade(trade_id)
     if trade is None:
@@ -362,7 +418,14 @@ def update_chat_pubkey(trade_id: str, identity_pubkey: str, chat_pubkey: str):
 
 def get_peer_chat_pubkey(trade_id: str, identity_pubkey: str):
     """
-    获取对方的聊天公钥
+    获取交易对方的聊天公钥。
+
+    Args:
+        trade_id: 交易 ID。
+        identity_pubkey: 调用者的身份公钥。
+
+    Returns:
+        Optional[str]: 对方的聊天公钥，如果未能成功识别对方则返回 None。
     """
     trade = get_trade(trade_id)
     if trade is None:

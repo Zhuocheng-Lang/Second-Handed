@@ -9,6 +9,7 @@
 
 
 from db.mysql import get_cursor
+from typing import Any, cast
 
 
 def insert_block(block: dict):
@@ -40,7 +41,7 @@ def insert_block(block: dict):
         )
 
 
-def get_last_block():
+def get_last_block() -> dict[str, Any] | None:
     sql = """
     SELECT * FROM blocks
     ORDER BY block_index DESC
@@ -51,10 +52,11 @@ def get_last_block():
 
     with get_cursor() as cursor:
         cursor.execute(sql)
-        return cursor.fetchone()
+        result = cursor.fetchone()
+        return cast(dict[str, Any] | None, result)
 
 
-def get_blocks_since(index: int):
+def get_blocks_since(index: int) -> list[dict[str, Any]]:
     sql = """
     SELECT * FROM blocks
     WHERE block_index > %s
@@ -63,10 +65,11 @@ def get_blocks_since(index: int):
 
     with get_cursor() as cursor:
         cursor.execute(sql, (index,))
-        return cursor.fetchall()
+        result = cursor.fetchall()
+        return cast(list[dict[str, Any]], result)
 
 
-def get_all_blocks():
+def get_all_blocks() -> list[dict[str, Any]]:
     """
     获取所有区块（按 block_index 升序）
     """
@@ -77,4 +80,5 @@ def get_all_blocks():
 
     with get_cursor() as cursor:
         cursor.execute(sql)
-        return cursor.fetchall()
+        result = cursor.fetchall()
+        return cast(list[dict[str, Any]], result)

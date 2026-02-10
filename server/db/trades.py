@@ -5,7 +5,7 @@
 
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 from db.mysql import get_cursor
 
 # 设置日志
@@ -98,7 +98,7 @@ def update_trade_status(trade_id: str, status: str, buyer_pubkey: str | None = N
         logger.info("交易状态更新成功，影响行数: %s", cursor.rowcount)
 
 
-def get_trade(trade_id: str):
+def get_trade(trade_id: str) -> dict[str, Any] | None:
     """
     获取交易详情
 
@@ -113,10 +113,10 @@ def get_trade(trade_id: str):
         cursor.execute(sql, (trade_id,))
         result = cursor.fetchone()
         logger.info("交易详情获取成功: %s", result is not None)
-        return result
+        return cast(dict[str, Any] | None, result)
 
 
-def list_trades(limit: int = 50):
+def list_trades(limit: int = 50) -> list[dict[str, Any]]:
     """
     获取交易列表
 
@@ -135,7 +135,7 @@ def list_trades(limit: int = 50):
         cursor.execute(sql, (limit,))
         result = cursor.fetchall()
         logger.info("交易列表获取成功，数量: %s", len(result))
-        return result
+        return cast(list[dict[str, Any]], result)
 
 
 def clear_trades():
@@ -220,7 +220,7 @@ def update_trade_chat_pubkey(
         logger.info("聊天公钥更新成功，影响行数: %s", cursor.rowcount)
 
 
-def get_trade_with_chat_info(trade_id: str):
+def get_trade_with_chat_info(trade_id: str) -> dict[str, Any] | None:
     """
     获取包含聊天信息的交易详情
 
@@ -240,7 +240,8 @@ def get_trade_with_chat_info(trade_id: str):
 
     with get_cursor() as cursor:
         cursor.execute(sql, (trade_id,))
-        row: Any = cursor.fetchone()
+        row = cursor.fetchone()
+        row = cast(dict[str, Any] | None, row)
 
     if not row:
         logger.info("未找到交易，交易ID: %s", trade_id)

@@ -11,7 +11,7 @@
 """
 
 from crypto.verify import verify_signature
-from crypto.hash import hash_object, canonical_json
+from crypto.hash import hash_object
 from services.blockchain import append_block
 
 from db.trades import (
@@ -19,6 +19,8 @@ from db.trades import (
     insert_trade,
     update_trade_status,
     update_trade_chat_pubkey,
+    update_trade_join,
+    get_trade_with_chat_info,
 )
 from db.blocks import get_all_blocks
 
@@ -269,7 +271,7 @@ def rebuild_state():
             update_trade_status(trade_id, "CANCELLED")
 
 
-def join_trade(trade_id: str, buyer_pubkey: str, buyer_chat_pubkey: dict = None):
+def join_trade(trade_id: str, buyer_pubkey: str, buyer_chat_pubkey: dict | None = None):
     """
     买家正式加入交易
     """
@@ -284,26 +286,10 @@ def join_trade(trade_id: str, buyer_pubkey: str, buyer_chat_pubkey: dict = None)
 
 
 def get_trade_detail(trade_id: str):
-    sql = "SELECT * FROM trades WHERE trade_id = %s"
-    with get_cursor() as cursor:
-        cursor.execute(sql, (trade_id,))
-        row = cursor.fetchone()
-
-    if not row:
-        return None
-
-    return {
-        "trade_id": row["trade_id"],
-        "seller_pubkey": row["seller_pubkey"],
-        "buyer_pubkey": row["buyer_pubkey"],
-        "seller_chat_pubkey": json.loads(row["seller_chat_pubkey"])
-        if row["seller_chat_pubkey"]
-        else None,
-        "buyer_chat_pubkey": json.loads(row["buyer_chat_pubkey"])
-        if row["buyer_chat_pubkey"]
-        else None,
-        "status": row["status"],
-    }
+    """
+    获取交易详情（包含聊天公钥信息）
+    """
+    return get_trade_with_chat_info(trade_id)
 
 
 # 聊天相关功能

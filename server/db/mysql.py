@@ -3,9 +3,12 @@
 # 与mysql主连接
 
 import pymysql
+import pymysql.cursors
 from contextlib import contextmanager
 from threading import Lock
 from queue import Queue
+from collections.abc import Generator
+from typing import cast
 
 # 数据库配置
 DB_CONFIG = {
@@ -73,14 +76,14 @@ def close_connection(conn):
 
 
 @contextmanager
-def get_cursor():
+def get_cursor() -> Generator[pymysql.cursors.DictCursor, None, None]:
     """
     提供 cursor 的上下文管理器
     自动处理 commit / rollback 和连接管理
     """
     conn = get_connection()
     try:
-        cursor = conn.cursor()
+        cursor = cast(pymysql.cursors.DictCursor, conn.cursor())
         yield cursor
         conn.commit()
     except Exception as e:

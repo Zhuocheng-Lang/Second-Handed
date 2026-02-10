@@ -1,12 +1,14 @@
-// FastAPI base URL for the client
+/** API 基础路径 */
 const API_BASE = "http://127.0.0.1:8000";
 
 export { API_BASE };
 
-/*
- * HTTP helpers
+/**
+ * 发送 GET 请求
+ * @param path 请求路径
+ * @param options 请求选项
+ * @returns 响应内容
  */
-
 export async function httpGet(path: string, options: { headers?: Record<string, string> } = {}) {
   console.log(`[api] 发送GET请求: ${path}`);
   const res = await fetch(API_BASE + path, {
@@ -29,6 +31,12 @@ export async function httpGet(path: string, options: { headers?: Record<string, 
   return data;
 }
 
+/**
+ * 发送 POST 请求
+ * @param path 请求路径
+ * @param body 请求内容
+ * @returns 响应内容
+ */
 export async function httpPost(path: string, body: any) {
   console.log(`[api] 发送POST请求: ${path}, 请求数据:`, body);
   const res = await fetch(API_BASE + path, {

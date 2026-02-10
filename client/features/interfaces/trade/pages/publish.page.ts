@@ -1,3 +1,7 @@
+/**
+ * 发布交易页面：允许卖家填写商品信息并发布到平台
+ */
+
 import { publishTrade } from "../../../domain/trade/index.js";
 
 const pageCss = `

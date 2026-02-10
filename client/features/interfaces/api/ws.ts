@@ -1,6 +1,6 @@
 import { API_BASE } from "./http.js";
 
-// WebSocket globals
+/** WebSocket 全局状态 */
 let chatSocket: WebSocket | null = null;
 let chatSocketCallbacks: ((data: any) => void)[] = [];
 
@@ -9,6 +9,11 @@ let currentIdentityPubkey: string | null = null;
 
 /**
  * 打开聊天 WebSocket 连接
+ * @param tradeId 交易ID
+ * @param identityPubkey 身份公钥
+ * @param chatPubkey 临时聊天公钥（用于加密）
+ * @param onMessage 收到消息时的回调函数
+ * @returns WebSocket 实例
  */
 export async function openChatSocket(tradeId: string, identityPubkey: string, chatPubkey: string | null, onMessage: (data: any) => void): Promise<WebSocket> {
   if (!tradeId || !identityPubkey) {
@@ -104,6 +109,7 @@ export async function openChatSocket(tradeId: string, identityPubkey: string, ch
 
 /**
  * 发送聊天消息
+ * @param message 消息对象
  */
 export function sendChatMessage(message: any): void {
   if (!chatSocket) {
@@ -119,6 +125,9 @@ export function sendChatMessage(message: any): void {
 
 /**
  * 发送聊天文本消息
+ * @param ciphertext 加密后的文本内容
+ * @param senderChatPubkey 发送者聊天公钥
+ * @param buyerChatPubkey 买家聊天公钥（选填）
  */
 export function sendChatTextMessage(ciphertext: any, senderChatPubkey: string, buyerChatPubkey: string | null): void {
   const message = {
@@ -133,7 +142,8 @@ export function sendChatTextMessage(ciphertext: any, senderChatPubkey: string, b
 }
 
 /**
- * 发送JOIN消息
+ * 发送 JOIN 消息
+ * @param chatPubkey 聊天公钥
  */
 export function sendJoinMessage(chatPubkey: string): void {
   const message = {

@@ -9,6 +9,9 @@ import {
 
 import { downloadText } from "./download.js";
 
+/**
+ * 引导用户生成并覆盖新的身份密钥
+ */
 export async function generateNewIdentity(): Promise<void> {
   const ok = confirm(
     "这将生成一套新的身份密钥，并覆盖当前身份。\n\n" +
@@ -23,6 +26,9 @@ export async function generateNewIdentity(): Promise<void> {
   alert("✅ 新身份已生成，请立即导出并备份你的密钥。");
 }
 
+/**
+ * 导出当前身份密钥并触发下载
+ */
 export async function exportIdentity(): Promise<void> {
   const kp = await loadIdentityKeyPair();
   if (!kp) {
@@ -36,6 +42,9 @@ export async function exportIdentity(): Promise<void> {
   alert(" 身份已导出，请妥善保存该文件。");
 }
 
+/**
+ * 通过弹窗交互导入身份密钥
+ */
 export async function importIdentityFromPrompt(): Promise<void> {
   const text = prompt(
     "请粘贴之前导出的身份密钥（JSON 文本）："
@@ -58,6 +67,9 @@ export async function importIdentityFromPrompt(): Promise<void> {
   }
 }
 
+/**
+ * 弹出当前公钥指纹 (Fingerprint)
+ */
 export async function showCurrentFingerprint(): Promise<void> {
   const kp = await loadIdentityKeyPair();
   if (!kp) {

@@ -1,3 +1,7 @@
+/**
+ * 交易详情与聊天页面：包含交易状态展示、加密聊天室及双签确认逻辑
+ */
+
 import { loadIdentityKeyPair } from "../../../domain/crypto/index.js";
 import { getTrade, joinTrade } from "../../api/index.js";
 import * as chat from "../../../application/chat/index.js";

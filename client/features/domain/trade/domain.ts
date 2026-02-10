@@ -27,6 +27,11 @@ export interface SignatureInfo {
   body: any;
 }
 
+/**
+ * 发布新交易
+ * @param tradeContent 交易内容（描述、价格等）
+ * @returns 生成的交易 ID
+ */
 export async function publishTrade(tradeContent: TradeContent): Promise<string> {
   const identity = await loadIdentityKeyPair();
   if (!identity) throw new Error("请先生成身份");
@@ -56,6 +61,11 @@ export async function publishTrade(tradeContent: TradeContent): Promise<string> 
   return tradeId;
 }
 
+/**
+ * 签署交易完成消息
+ * @param tradeId 交易 ID
+ * @returns 签名信息
+ */
 export async function signComplete(tradeId: string): Promise<SignatureInfo> {
   const identity = await loadIdentityKeyPair();
   if (!identity) throw new Error("请先生成身份");
@@ -73,6 +83,11 @@ export async function signComplete(tradeId: string): Promise<SignatureInfo> {
   return { hash: completeHash, signature, pubkey: publicKey, body };
 }
 
+/**
+ * 根据已有消息体签署交易完成消息
+ * @param body 消息体
+ * @returns 签名信息
+ */
 export async function signCompleteWithBody(body: any): Promise<SignatureInfo> {
   const id = await loadIdentityKeyPair();
   if (!id) throw new Error("No identity");
@@ -81,6 +96,12 @@ export async function signCompleteWithBody(body: any): Promise<SignatureInfo> {
   return { hash: h, signature: s, pubkey: id.publicKey, body };
 }
 
+/**
+ * 提交并验证双签交易完成
+ * @param tradeId 交易 ID
+ * @param sigA 签名 A（通常是卖方）
+ * @param sigB 签名 B（通常是买方）
+ */
 export async function submitComplete(tradeId: string, sigA: SignatureInfo, sigB: SignatureInfo): Promise<void> {
   const localHash = await hash(sigA.body);
   if (localHash !== sigA.hash || sigA.hash !== sigB.hash) throw new Error("签名校验错误: 哈希不匹配");
@@ -92,6 +113,10 @@ export async function submitComplete(tradeId: string, sigA: SignatureInfo, sigB:
   await completeTrade({ trade_id: tradeId, hash: sigA.hash, sig_seller: sigA.signature, sig_buyer: sigB.signature });
 }
 
+/**
+ * 取消交易
+ * @param tradeId 交易 ID
+ */
 export async function cancelTrade(tradeId: string): Promise<void> {
   const identity = await loadIdentityKeyPair();
   if (!identity) throw new Error("请先生成身份");

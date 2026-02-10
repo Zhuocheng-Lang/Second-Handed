@@ -1,3 +1,7 @@
+/**
+ * 交易大厅页面：提供交易列表展示、身份管理及区块链导出功能
+ */
+
 import { fetchTradeList, exportBlocks as apiExportBlocks } from "../../api/index.js";
 import { loadTradeMeta } from "../../../infrastructure/storage/trade_meta.js";
 import * as keymgr from "../../../infrastructure/ui/keymgr.js";

@@ -4,6 +4,10 @@ import { state } from "./state.js";
 import type { ChatSession } from "./types.js";
 import { normalizeChatPubKey } from "./normalize.js";
 
+/**
+ * 根据交易信息建立初始聊天会话
+ * @param tradeChatInfo 交易相关的聊天元数据
+ */
 export async function establishInitialSession(tradeChatInfo: any) {
   if (!state.identity) return;
   state.isSeller = tradeChatInfo.seller_pubkey === state.identity.publicKey;
@@ -19,6 +23,12 @@ export async function establishInitialSession(tradeChatInfo: any) {
   }
 }
 
+/**
+ * 创建或获取与特定对端的聊天会话
+ * @param peerChatPubKey 对端聊天公钥
+ * @param isInitiator 是否为发起方
+ * @returns 聊天会话对象
+ */
 export async function createSession(peerChatPubKey: string, isInitiator = true): Promise<ChatSession> {
   if (state.sessions.has(peerChatPubKey)) return state.sessions.get(peerChatPubKey)!;
 
@@ -42,6 +52,9 @@ export async function createSession(peerChatPubKey: string, isInitiator = true):
   return session;
 }
 
+/**
+ * 从服务器加载并解密聊天历史记录
+ */
 export async function loadChatHistory() {
   if (!state.currentTradeId) return;
   try {

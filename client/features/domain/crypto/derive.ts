@@ -1,5 +1,13 @@
 import { base64ToBuf } from "./encoding.js";
 
+/**
+ * 派生用于加密聊天消息的对称密钥 (AES-GCM)
+ * 使用 ECDH (X25519) 获取共享密钥，并结合 HKDF 进行密钥平滑
+ * @param myX25519PrivateKeyB64 我的 X25519 私钥 (Base64)
+ * @param peerX25519PublicKeyB64 对方的 X25519 公钥 (Base64)
+ * @param tradeId 交易 ID (作为 HKDF 的 Salt)
+ * @returns 派生的 CryptoKey 对象
+ */
 export async function deriveChatKey(
   myX25519PrivateKeyB64: string,
   peerX25519PublicKeyB64: string,

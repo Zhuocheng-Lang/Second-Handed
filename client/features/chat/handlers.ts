@@ -9,7 +9,7 @@ export async function handleSocketMessage(msg: any) {
     const data = typeof msg === "string" ? JSON.parse(msg) : msg;
     if (data.type === "JOIN") await handleJoinMessage(data);
     else if (data.type === "CHAT") await handleChatMessage(data);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 async function handleJoinMessage(msg: any) {
@@ -38,5 +38,5 @@ async function handleChatMessage(msg: any) {
     session.messages.push(messageObj);
     if (state.currentSessionPeer !== sender) session.unread++;
     if (state.onNewMessage) state.onNewMessage({ sessionId: sender, message: messageObj, unread: session.unread });
-  } catch (e) {}
+  } catch (e) { }
 }

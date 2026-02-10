@@ -37,7 +37,7 @@ export async function initChat(tradeId: string, uiCallbacks: ChatUICallbacks = {
 
     try {
       await updateChatPubkey(tradeId, state.identity.publicKey, state.myChatPubKeyStr);
-    } catch (e) {}
+    } catch (e) { }
 
     const tradeChatInfo = await getTradeChatInfo(tradeId);
     await establishInitialSession(tradeChatInfo);

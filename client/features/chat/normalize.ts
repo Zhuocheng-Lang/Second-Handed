@@ -5,7 +5,7 @@ export function normalizeChatPubKey(value: any): string | null {
     try {
       const parsed = JSON.parse(key);
       if (parsed && parsed.pubkey) key = parsed.pubkey;
-    } catch (e) {}
+    } catch (e) { }
   } else if (key.pubkey) {
     key = key.pubkey;
   }

@@ -70,8 +70,8 @@ export async function loadChatHistory() {
             type: "chat",
             isOwn: senderPubKey === state.myChatPubKeyStr
           });
-        } catch (e) {}
+        } catch (e) { }
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 }

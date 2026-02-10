@@ -237,7 +237,7 @@ function handleNewMessage(payload: { sessionId: string; message: any }) {
         (window as any).__pendingPeerSig = p.signature;
         alert("对方已请求完成交易，请点击“确认完成”。");
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 

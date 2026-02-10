@@ -42,17 +42,18 @@ def register_routes(app):
     app.include_router(block_router)
 
 
-if __name__ == "__main__":
+app = create_app()
+register_routes(app)
+
+
+def main():
     import uvicorn
 
-    app = create_app()
-    register_routes(app)
-
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
-else:
-    # 当作为模块导入时也要注册路由
-    app = create_app()
-    register_routes(app)
+
+
+if __name__ == "__main__":
+    main()
 
 
 # uvicorn app:app --reload

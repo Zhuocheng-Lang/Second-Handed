@@ -1,17 +1,18 @@
 # backend/services/chat_service.py
 
-from typing import Dict, List, Tuple
 from db.chats import insert_message, get_messages
 
 # 房间管理: trade_id -> list of (connection, identity_pubkey, chat_pubkey)
-_rooms: Dict[str, List[Tuple]] = {}
+_rooms: dict[str, list[tuple]] = {}
 
 # -----------------------------
 # 加入聊天室
 # -----------------------------
 
 
-async def join_room(trade_id: str, conn, identity_pubkey: str, chat_pubkey: str = None):
+async def join_room(
+    trade_id: str, conn, identity_pubkey: str, chat_pubkey: str | None = None
+):
     """
     将一个连接加入指定 trade_id 的聊天室
     """
@@ -58,7 +59,9 @@ def leave_room(trade_id: str, conn):
 # -----------------------------
 
 
-async def broadcast_join(trade_id: str, identity_pubkey: str, chat_pubkey: str = None):
+async def broadcast_join(
+    trade_id: str, identity_pubkey: str, chat_pubkey: str | None = None
+):
     """
     广播用户加入消息
     """
